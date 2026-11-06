@@ -903,6 +903,12 @@ footer.site-footer {
   <div id="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+  /* jsdelivr 在国内偶尔打不开：没加载成功就换 unpkg */
+  if (!window.supabase) {
+    document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');
+  }
+  </script>
+  <script>
 /* 离线演示层：没有后端接口时，用 localStorage 模拟 /api，保证 index.html 双击可用。
    部署到有后端的服务器时，真实接口返回 JSON 就直接走真实接口。 */
 (() => {
@@ -1251,22 +1257,15 @@ footer.site-footer {
 <script>
 (() => {
   /* Supabase 适配层：把 /api/* 的请求翻译成 Supabase RPC。
-     优先级：加盟商自己的 Node 后端 → 这里 → 他原来的离线模拟。
-     账号沿用班级平台（app_users），所以学生用班级平台的登录名密码就能进。 */
+     账号沿用班级平台（app_users），学生用班级平台的登录名密码就能进。
+     注意：连不上数据库时明确报错，绝不静默退回离线演示数据（那样会伪装成“密码错误”）。 */
   const SUPA_URL = 'https://hkmxmkujzikcgrnlrxit.supabase.co';
   const SUPA_KEY = 'sb_publishable_eK9SJy7QLl9WLpcXKncHmw_U0GTsPVw';
   const TOKEN_KEY = 'xq18_token_v1';
 
-  if (!window.supabase) return;
-  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
+  /* 登录只在这个标签页里有效：关掉页面就要重新登录，最长 12 小时 */
+  const MAX_AGE = 12 * 3600 * 1000;
   const lowerFetch = window.fetch.bind(window);
-
-  const token = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
-  const setToken = (t) => {
-    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-  };
 
   const reply = (data, status = 200) => ({
     ok: status >= 200 && status < 300,
@@ -1276,13 +1275,57 @@ footer.site-footer {
     text: async () => JSON.stringify(data)
   });
 
+  const token = () => {
+    try {
+      const raw = sessionStorage.getItem(TOKEN_KEY);
+      if (!raw) return '';
+      const o = JSON.parse(raw);
+      if (!o || !o.t || Date.now() - (o.ts || 0) > MAX_AGE) {
+        sessionStorage.removeItem(TOKEN_KEY);
+        return '';
+      }
+      return o.t;
+    } catch (e) { return ''; }
+  };
+  const setToken = (t) => {
+    try {
+      t ? sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ t, ts: Date.now() }))
+        : sessionStorage.removeItem(TOKEN_KEY);
+    } catch (e) {}
+  };
+
+  /* 数据库脚本没加载上：直接说清楚，不要退回假数据 */
+  if (!window.supabase) {
+    window.fetch = async function (input, init = {}) {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (!url.includes('/api/')) return lowerFetch(input, init);
+      return reply({ error: '数据库脚本没加载成功（多半是网络问题），刷新页面重试，或换个网络' }, 503);
+    };
+    return;
+  }
+
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
   async function rpc(fn, params) {
-    const res = await sb.rpc(fn, params || {});
-    if (res.error) throw new Error(res.error.message || '数据库连接失败');
+    let res;
+    try {
+      res = await sb.rpc(fn, params || {});
+    } catch (e) {
+      throw new Error('连不上数据库，请检查网络后重试');
+    }
+    if (res.error) {
+      const m = String(res.error.message || '');
+      if (/PGRST202|could not find the function|schema cache/i.test(m)) {
+        throw new Error('数据库还缺少象棋的表/函数：请先跑 加盟商/xq_平台.sql');
+      }
+      throw new Error(m || '数据库连接失败');
+    }
     const d = res.data;
     if (!d || d.ok === false) {
       const err = new Error((d && d.error) || '操作失败');
-      err.app = true;                       // 业务错误：不要退回离线模拟
+      err.app = true;
       throw err;
     }
     return d;
@@ -1417,22 +1460,18 @@ footer.site-footer {
     const url = typeof input === 'string' ? input : (input && input.url) || '';
     if (!url.includes('/api/')) return lowerFetch(input, init);
 
-    // 1) 加盟商的 Node 后端（部署了就能用）
+    // 1) 加盟商自己的 Node 后端（部署了就走它）
     try {
       const res = await lowerFetch(input, init);
       const ct = (res.headers.get('content-type') || '').toLowerCase();
       if (ct.includes('application/json')) return res;
-    } catch (e) { /* 没有后端，继续往下 */ }
+    } catch (e) { /* 没有后端 */ }
 
-    // 2) Supabase
+    // 2) Supabase（失败就如实报错，不退回假数据）
     try {
       return await handle(url, init);
     } catch (e) {
-      const msg = String((e && e.message) || '');
-      const networkDown = /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(msg);
-      if (e && e.app && !networkDown) return reply({ error: msg }, 400);
-      // 3) 连不上 → 退回他原来的离线模拟
-      return lowerFetch(input, init);
+      return reply({ error: (e && e.message) || '操作失败' }, 400);
     }
   };
 })();
