@@ -909,6 +909,229 @@ footer.site-footer {
   }
   </script>
   <script>
+(() => {
+  /* Supabase 适配层：把 /api/* 的请求翻译成 Supabase RPC。
+     注意：本段必须放在「离线演示层」之前，否则拿到的 fetch 已经被模拟层替换过。
+     账号沿用班级平台（app_users），学生用班级平台的登录名密码就能进。
+     注意：连不上数据库时明确报错，绝不静默退回离线演示数据（那样会伪装成“密码错误”）。 */
+  const SUPA_URL = 'https://hkmxmkujzikcgrnlrxit.supabase.co';
+  const SUPA_KEY = 'sb_publishable_eK9SJy7QLl9WLpcXKncHmw_U0GTsPVw';
+  const TOKEN_KEY = 'xq18_token_v1';
+
+  /* 登录只在这个标签页里有效：关掉页面就要重新登录，最长 12 小时 */
+  const MAX_AGE = 12 * 3600 * 1000;
+  const lowerFetch = window.fetch.bind(window);
+
+  const reply = (data, status = 200) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (k) => (String(k).toLowerCase() === 'content-type' ? 'application/json' : null) },
+    json: async () => data,
+    text: async () => JSON.stringify(data)
+  });
+
+  const token = () => {
+    try {
+      const raw = sessionStorage.getItem(TOKEN_KEY);
+      if (!raw) return '';
+      const o = JSON.parse(raw);
+      if (!o || !o.t || Date.now() - (o.ts || 0) > MAX_AGE) {
+        sessionStorage.removeItem(TOKEN_KEY);
+        return '';
+      }
+      return o.t;
+    } catch (e) { return ''; }
+  };
+  const setToken = (t) => {
+    try {
+      t ? sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ t, ts: Date.now() }))
+        : sessionStorage.removeItem(TOKEN_KEY);
+    } catch (e) {}
+  };
+
+  /* 数据库脚本没加载上：直接说清楚，不要退回假数据 */
+  if (!window.supabase) {
+    window.fetch = async function (input, init = {}) {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (!url.includes('/api/')) return lowerFetch(input, init);
+      return reply({ error: '数据库脚本没加载成功（多半是网络问题），刷新页面重试，或换个网络' }, 503);
+    };
+    return;
+  }
+
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  async function rpc(fn, params) {
+    let res;
+    try {
+      res = await sb.rpc(fn, params || {});
+    } catch (e) {
+      throw new Error('连不上数据库，请检查网络后重试');
+    }
+    if (res.error) {
+      const m = String(res.error.message || '');
+      if (/PGRST202|could not find the function|schema cache/i.test(m)) {
+        throw new Error('数据库还缺少象棋的表/函数：请先跑 加盟商/xq_平台.sql');
+      }
+      throw new Error(m || '数据库连接失败');
+    }
+    const d = res.data;
+    if (!d || d.ok === false) {
+      const err = new Error((d && d.error) || '操作失败');
+      err.app = true;
+      throw err;
+    }
+    return d;
+  }
+
+  async function handle(urlStr, init) {
+    const method = (init.method || 'GET').toUpperCase();
+    const u = new URL(urlStr, 'http://local');
+    const path = u.pathname;
+    let body = {};
+    if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = {}; } }
+
+    /* ---------- 账号 ---------- */
+    if (path === '/api/login' && method === 'POST') {
+      const d = await rpc('api_login', {
+        p_username: String(body.login_name || '').trim(),
+        p_password: String(body.password || '')
+      });
+      setToken(d.token);
+      return reply({
+        user: {
+          id: d.profile.id,
+          login_name: d.profile.username,
+          display_name: d.profile.display_name || d.profile.username
+        }
+      });
+    }
+
+    if (path === '/api/logout' && method === 'POST') {
+      if (token()) { try { await rpc('api_logout', { p_token: token() }); } catch (e) {} }
+      setToken('');
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/me' && method === 'GET') {
+      if (!token()) return reply({ user: null, is_admin: false });
+      const d = await rpc('api_xq_me', { p_token: token() });
+      return reply({ user: d.user, is_admin: !!d.is_admin });
+    }
+
+    /* ---------- 大师列表 ---------- */
+    if (path === '/api/masters' && method === 'GET') {
+      const d = await rpc('api_xq_masters', { p_token: token() });
+      return reply({ masters: d.masters, server_time: d.server_time });
+    }
+
+    /* ---------- 申请 ---------- */
+    if (path === '/api/applications' && method === 'POST') {
+      const d = await rpc('api_xq_apply', {
+        p_token: token(),
+        p_master_id: Number(body.master_id),
+        p_note: String(body.note || '')
+      });
+      return reply({ ok: true, id: d.id });
+    }
+
+    if (path === '/api/my/applications' && method === 'GET') {
+      const d = await rpc('api_xq_my_apps', { p_token: token() });
+      return reply({ applications: d.applications });
+    }
+
+    /* ---------- 管理端 ---------- */
+    if (path === '/api/admin/login' && method === 'POST') {
+      await rpc('api_xq_admin_login', { p_token: token(), p_password: String(body.password || '') });
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/admin/logout' && method === 'POST') {
+      try { await rpc('api_xq_admin_logout', { p_token: token() }); } catch (e) {}
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/admin/applications' && method === 'GET') {
+      const d = await rpc('api_xq_admin_apps', {
+        p_token: token(),
+        p_status: u.searchParams.get('status') || 'all'
+      });
+      return reply({ applications: d.applications, counts: d.counts });
+    }
+
+    const respond = path.match(/^\/api\/admin\/applications\/(\d+)\/respond$/);
+    if (respond && method === 'POST') {
+      const d = await rpc('api_xq_admin_respond', {
+        p_token: token(),
+        p_id: Number(respond[1]),
+        p_action: String(body.action || ''),
+        p_note: String(body.note || '')
+      });
+      return reply({ ok: true, status: d.status });
+    }
+
+    if (path === '/api/admin/masters' && method === 'GET') {
+      const d = await rpc('api_xq_admin_masters', { p_token: token() });
+      return reply({ masters: d.masters });
+    }
+
+    if (path === '/api/admin/masters' && method === 'POST') {
+      const d = await rpc('api_xq_admin_master_save', {
+        p_token: token(), p_id: null,
+        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
+        p_slots: Array.isArray(body.slots) ? body.slots : []
+      });
+      return reply({ ok: true, id: d.id });
+    }
+
+    const masterOne = path.match(/^\/api\/admin\/masters\/(\d+)$/);
+    if (masterOne && method === 'PUT') {
+      await rpc('api_xq_admin_master_save', {
+        p_token: token(), p_id: Number(masterOne[1]),
+        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
+        p_slots: Array.isArray(body.slots) ? body.slots : []
+      });
+      return reply({ ok: true });
+    }
+    if (masterOne && method === 'DELETE') {
+      await rpc('api_xq_admin_master_delete', { p_token: token(), p_id: Number(masterOne[1]) });
+      return reply({ ok: true });
+    }
+
+    const masterActive = path.match(/^\/api\/admin\/masters\/(\d+)\/active$/);
+    if (masterActive && method === 'PATCH') {
+      const d = await rpc('api_xq_admin_master_active', {
+        p_token: token(), p_id: Number(masterActive[1]), p_active: !!body.active
+      });
+      return reply({ ok: true, active: !!d.active });
+    }
+
+    return reply({ error: '接口不存在' }, 404);
+  }
+
+  window.fetch = async function (input, init = {}) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (!url.includes('/api/')) return lowerFetch(input, init);
+
+    // 1) 加盟商自己的 Node 后端（部署了就走它）
+    try {
+      const res = await lowerFetch(input, init);
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      if (ct.includes('application/json')) return res;
+    } catch (e) { /* 没有后端 */ }
+
+    // 2) Supabase（失败就如实报错，不退回假数据）
+    try {
+      return await handle(url, init);
+    } catch (e) {
+      return reply({ error: (e && e.message) || '操作失败' }, 400);
+    }
+  };
+})();
+</script>
+  <script>
 /* 离线演示层：没有后端接口时，用 localStorage 模拟 /api，保证 index.html 双击可用。
    部署到有后端的服务器时，真实接口返回 JSON 就直接走真实接口。 */
 (() => {
@@ -1253,228 +1476,6 @@ footer.site-footer {
   // 调试用：控制台可执行 localStorage.removeItem('xq18_platform_db_v1') 后刷新，恢复演示数据
 })();
 
-</script>
-<script>
-(() => {
-  /* Supabase 适配层：把 /api/* 的请求翻译成 Supabase RPC。
-     账号沿用班级平台（app_users），学生用班级平台的登录名密码就能进。
-     注意：连不上数据库时明确报错，绝不静默退回离线演示数据（那样会伪装成“密码错误”）。 */
-  const SUPA_URL = 'https://hkmxmkujzikcgrnlrxit.supabase.co';
-  const SUPA_KEY = 'sb_publishable_eK9SJy7QLl9WLpcXKncHmw_U0GTsPVw';
-  const TOKEN_KEY = 'xq18_token_v1';
-
-  /* 登录只在这个标签页里有效：关掉页面就要重新登录，最长 12 小时 */
-  const MAX_AGE = 12 * 3600 * 1000;
-  const lowerFetch = window.fetch.bind(window);
-
-  const reply = (data, status = 200) => ({
-    ok: status >= 200 && status < 300,
-    status,
-    headers: { get: (k) => (String(k).toLowerCase() === 'content-type' ? 'application/json' : null) },
-    json: async () => data,
-    text: async () => JSON.stringify(data)
-  });
-
-  const token = () => {
-    try {
-      const raw = sessionStorage.getItem(TOKEN_KEY);
-      if (!raw) return '';
-      const o = JSON.parse(raw);
-      if (!o || !o.t || Date.now() - (o.ts || 0) > MAX_AGE) {
-        sessionStorage.removeItem(TOKEN_KEY);
-        return '';
-      }
-      return o.t;
-    } catch (e) { return ''; }
-  };
-  const setToken = (t) => {
-    try {
-      t ? sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ t, ts: Date.now() }))
-        : sessionStorage.removeItem(TOKEN_KEY);
-    } catch (e) {}
-  };
-
-  /* 数据库脚本没加载上：直接说清楚，不要退回假数据 */
-  if (!window.supabase) {
-    window.fetch = async function (input, init = {}) {
-      const url = typeof input === 'string' ? input : (input && input.url) || '';
-      if (!url.includes('/api/')) return lowerFetch(input, init);
-      return reply({ error: '数据库脚本没加载成功（多半是网络问题），刷新页面重试，或换个网络' }, 503);
-    };
-    return;
-  }
-
-  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-
-  async function rpc(fn, params) {
-    let res;
-    try {
-      res = await sb.rpc(fn, params || {});
-    } catch (e) {
-      throw new Error('连不上数据库，请检查网络后重试');
-    }
-    if (res.error) {
-      const m = String(res.error.message || '');
-      if (/PGRST202|could not find the function|schema cache/i.test(m)) {
-        throw new Error('数据库还缺少象棋的表/函数：请先跑 加盟商/xq_平台.sql');
-      }
-      throw new Error(m || '数据库连接失败');
-    }
-    const d = res.data;
-    if (!d || d.ok === false) {
-      const err = new Error((d && d.error) || '操作失败');
-      err.app = true;
-      throw err;
-    }
-    return d;
-  }
-
-  async function handle(urlStr, init) {
-    const method = (init.method || 'GET').toUpperCase();
-    const u = new URL(urlStr, 'http://local');
-    const path = u.pathname;
-    let body = {};
-    if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = {}; } }
-
-    /* ---------- 账号 ---------- */
-    if (path === '/api/login' && method === 'POST') {
-      const d = await rpc('api_login', {
-        p_username: String(body.login_name || '').trim(),
-        p_password: String(body.password || '')
-      });
-      setToken(d.token);
-      return reply({
-        user: {
-          id: d.profile.id,
-          login_name: d.profile.username,
-          display_name: d.profile.display_name || d.profile.username
-        }
-      });
-    }
-
-    if (path === '/api/logout' && method === 'POST') {
-      if (token()) { try { await rpc('api_logout', { p_token: token() }); } catch (e) {} }
-      setToken('');
-      return reply({ ok: true });
-    }
-
-    if (path === '/api/me' && method === 'GET') {
-      if (!token()) return reply({ user: null, is_admin: false });
-      const d = await rpc('api_xq_me', { p_token: token() });
-      return reply({ user: d.user, is_admin: !!d.is_admin });
-    }
-
-    /* ---------- 大师列表 ---------- */
-    if (path === '/api/masters' && method === 'GET') {
-      const d = await rpc('api_xq_masters', { p_token: token() });
-      return reply({ masters: d.masters, server_time: d.server_time });
-    }
-
-    /* ---------- 申请 ---------- */
-    if (path === '/api/applications' && method === 'POST') {
-      const d = await rpc('api_xq_apply', {
-        p_token: token(),
-        p_master_id: Number(body.master_id),
-        p_note: String(body.note || '')
-      });
-      return reply({ ok: true, id: d.id });
-    }
-
-    if (path === '/api/my/applications' && method === 'GET') {
-      const d = await rpc('api_xq_my_apps', { p_token: token() });
-      return reply({ applications: d.applications });
-    }
-
-    /* ---------- 管理端 ---------- */
-    if (path === '/api/admin/login' && method === 'POST') {
-      await rpc('api_xq_admin_login', { p_token: token(), p_password: String(body.password || '') });
-      return reply({ ok: true });
-    }
-
-    if (path === '/api/admin/logout' && method === 'POST') {
-      try { await rpc('api_xq_admin_logout', { p_token: token() }); } catch (e) {}
-      return reply({ ok: true });
-    }
-
-    if (path === '/api/admin/applications' && method === 'GET') {
-      const d = await rpc('api_xq_admin_apps', {
-        p_token: token(),
-        p_status: u.searchParams.get('status') || 'all'
-      });
-      return reply({ applications: d.applications, counts: d.counts });
-    }
-
-    const respond = path.match(/^\/api\/admin\/applications\/(\d+)\/respond$/);
-    if (respond && method === 'POST') {
-      const d = await rpc('api_xq_admin_respond', {
-        p_token: token(),
-        p_id: Number(respond[1]),
-        p_action: String(body.action || ''),
-        p_note: String(body.note || '')
-      });
-      return reply({ ok: true, status: d.status });
-    }
-
-    if (path === '/api/admin/masters' && method === 'GET') {
-      const d = await rpc('api_xq_admin_masters', { p_token: token() });
-      return reply({ masters: d.masters });
-    }
-
-    if (path === '/api/admin/masters' && method === 'POST') {
-      const d = await rpc('api_xq_admin_master_save', {
-        p_token: token(), p_id: null,
-        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
-        p_slots: Array.isArray(body.slots) ? body.slots : []
-      });
-      return reply({ ok: true, id: d.id });
-    }
-
-    const masterOne = path.match(/^\/api\/admin\/masters\/(\d+)$/);
-    if (masterOne && method === 'PUT') {
-      await rpc('api_xq_admin_master_save', {
-        p_token: token(), p_id: Number(masterOne[1]),
-        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
-        p_slots: Array.isArray(body.slots) ? body.slots : []
-      });
-      return reply({ ok: true });
-    }
-    if (masterOne && method === 'DELETE') {
-      await rpc('api_xq_admin_master_delete', { p_token: token(), p_id: Number(masterOne[1]) });
-      return reply({ ok: true });
-    }
-
-    const masterActive = path.match(/^\/api\/admin\/masters\/(\d+)\/active$/);
-    if (masterActive && method === 'PATCH') {
-      const d = await rpc('api_xq_admin_master_active', {
-        p_token: token(), p_id: Number(masterActive[1]), p_active: !!body.active
-      });
-      return reply({ ok: true, active: !!d.active });
-    }
-
-    return reply({ error: '接口不存在' }, 404);
-  }
-
-  window.fetch = async function (input, init = {}) {
-    const url = typeof input === 'string' ? input : (input && input.url) || '';
-    if (!url.includes('/api/')) return lowerFetch(input, init);
-
-    // 1) 加盟商自己的 Node 后端（部署了就走它）
-    try {
-      const res = await lowerFetch(input, init);
-      const ct = (res.headers.get('content-type') || '').toLowerCase();
-      if (ct.includes('application/json')) return res;
-    } catch (e) { /* 没有后端 */ }
-
-    // 2) Supabase（失败就如实报错，不退回假数据）
-    try {
-      return await handle(url, init);
-    } catch (e) {
-      return reply({ error: (e && e.message) || '操作失败' }, 400);
-    }
-  };
-})();
 </script>
 <script>
 /* 18码象棋平台 · 单页站点（用户端 + 我的 + 管理端） */
