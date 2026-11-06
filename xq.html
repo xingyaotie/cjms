@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>18码象棋平台 · 找大师下一盘</title>
+  <style>
+/* ===== 18码象棋平台 · 红色主题 ===== */
+:root {
+  --red-950: #2b0507;
+  --red-900: #43090c;
+  --red-800: #5c0f13;
+  --red-700: #7a1117;
+  --red-600: #9b1a1f;
+  --red-500: #b81f26;
+  --red-400: #d13b3f;
+  --gold-500: #d9a94e;
+  --gold-400: #e8c37a;
+  --gold-300: #f3dca8;
+  --cream: #fdf7f0;
+  --paper: #ffffff;
+  --ink: #2a1a16;
+  --ink-soft: #6f5a52;
+  --line: #eadfd5;
+  --green: #2f7d4f;
+  --grey: #9c918c;
+  --shadow: 0 14px 40px rgba(74, 8, 12, 0.12);
+  --shadow-sm: 0 6px 18px rgba(74, 8, 12, 0.08);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 110% -10%, rgba(184, 31, 38, 0.09), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(217, 169, 78, 0.12), transparent 55%),
+    var(--cream);
+  color: var(--ink);
+  font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", system-ui, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--red-600); text-decoration: none; }
+a:hover { color: var(--red-500); }
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
+  letter-spacing: 0.02em;
+}
+
+button, input, select, textarea { font-family: inherit; font-size: 15px; }
+
+/* ===== 顶部 ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 4vw, 48px);
+  background: linear-gradient(135deg, var(--red-800), var(--red-600) 55%, var(--red-700));
+  border-bottom: 3px solid var(--gold-500);
+  box-shadow: 0 6px 24px rgba(67, 9, 12, 0.28);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-size: clamp(19px, 2.2vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.brand:hover { color: #fff; }
+
+.brand-seal {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff6e2, var(--gold-300) 60%, var(--gold-500));
+  color: var(--red-800);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px rgba(122, 17, 23, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.brand-tag {
+  margin-left: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--gold-400);
+  color: var(--red-900);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.header-actions { display: flex; align-items: center; gap: 10px; }
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--red-500), var(--red-700));
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 6px 16px rgba(155, 26, 31, 0.28);
+}
+.btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { cursor: not-allowed; transform: none; filter: none; }
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(243, 220, 168, 0.55);
+  box-shadow: none;
+  color: #fdf1da;
+}
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.22); }
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--red-900);
+  box-shadow: 0 6px 16px rgba(217, 169, 78, 0.35);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--red-600);
+  color: var(--red-700);
+  box-shadow: none;
+}
+.btn-outline:hover { background: rgba(184, 31, 38, 0.07); }
+
+.btn-grey {
+  background: #e7e1dc;
+  color: #8b7f79;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-sm { padding: 6px 14px; font-size: 14px; }
+.btn-block { width: 100%; }
+.btn-danger { background: linear-gradient(135deg, #b3262b, #7d1116); }
+.btn-soft { background: rgba(184, 31, 38, 0.08); color: var(--red-700); box-shadow: none; }
+.btn-soft:hover { background: rgba(184, 31, 38, 0.14); }
+
+/* ===== 布局 ===== */
+main.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 40px) 72px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 46px);
+  border-radius: 22px;
+  background:
+    linear-gradient(120deg, rgba(43, 5, 7, 0.92), rgba(122, 17, 23, 0.9)),
+    repeating-linear-gradient(45deg, rgba(243, 220, 168, 0.06) 0 2px, transparent 2px 14px);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.hero::after {
+  content: "象";
+  position: absolute;
+  right: clamp(-10px, 2vw, 40px);
+  bottom: -70px;
+  font-family: "Songti SC", "STSong", serif;
+  font-size: clamp(160px, 22vw, 280px);
+  color: rgba(243, 220, 168, 0.07);
+  line-height: 1;
+  pointer-events: none;
+}
+.hero .eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 14px;
+  border: 1px solid rgba(243, 220, 168, 0.6);
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--gold-300);
+}
+.hero h1 { font-size: clamp(28px, 4.2vw, 42px); margin-bottom: 10px; }
+.hero p { margin: 0; color: rgba(255, 248, 240, 0.78); max-width: 620px; }
+.hero .hero-meta { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 22px; font-size: 14px; color: var(--gold-300); }
+.hero .hero-meta strong { font-size: 20px; color: #fff; margin-right: 4px; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 38px 0 16px;
+}
+.section-head h2 { font-size: clamp(21px, 2.6vw, 26px); }
+.section-head .hint { color: var(--ink-soft); font-size: 14px; }
+
+/* ===== 大师卡片 ===== */
+.master-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: 18px;
+}
+
+.master-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.master-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: rgba(184, 31, 38, 0.25); }
+.master-card.is-off { opacity: 0.72; }
+.master-card.is-off:hover { transform: none; }
+
+.master-top { display: flex; align-items: center; gap: 12px; }
+
+.avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff3d9, var(--gold-300) 65%, var(--gold-500));
+  color: var(--red-800);
+  font-family: "Songti SC", "STSong", serif;
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px rgba(122, 17, 23, 0.18);
+}
+
+.master-name { font-size: 20px; font-weight: 700; letter-spacing: 0.04em; }
+.master-sub { font-size: 13px; color: var(--ink-soft); }
+
+.price { margin-left: auto; text-align: right; line-height: 1.2; }
+.price strong { font-size: 24px; color: var(--red-600); font-family: Georgia, "Times New Roman", serif; }
+.price small { display: block; font-size: 12px; color: var(--ink-soft); }
+
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge-on { background: rgba(47, 125, 79, 0.12); color: var(--green); }
+.badge-off { background: rgba(156, 145, 140, 0.16); color: var(--grey); }
+.badge-time { background: rgba(184, 31, 38, 0.08); color: var(--red-600); }
+.badge-time::before { background: currentColor; }
+
+.slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot-chip {
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: #fbf3ea;
+  border: 1px dashed #e4cfb4;
+  font-size: 12px;
+  color: #7a5c33;
+}
+
+.master-card .btn { margin-top: auto; }
+
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* ===== 表单 / 弹窗 ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(43, 5, 7, 0.55);
+  backdrop-filter: blur(3px);
+}
+.modal-backdrop.open { display: flex; animation: fadeIn 0.18s ease; }
+
+.modal {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 26px;
+  background: var(--paper);
+  border-top: 5px solid var(--red-600);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: rise 0.22s ease;
+}
+.modal h3 { font-size: 22px; margin-bottom: 4px; }
+.modal .modal-sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 20px; }
+.modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--red-800); }
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdfa;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field textarea { min-height: 84px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--red-400);
+  box-shadow: 0 0 0 3px rgba(184, 31, 38, 0.1);
+}
+.field .help { margin-top: 5px; font-size: 12px; color: var(--ink-soft); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.weekday-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.weekday-picker button {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.weekday-picker button.on {
+  background: linear-gradient(135deg, var(--red-500), var(--red-700));
+  border-color: transparent;
+  color: #fff;
+}
+
+.slot-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fbf3ea;
+  border: 1px solid #f0e2d2;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.slot-row .slot-text { flex: 1; }
+.slot-row .x {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(184, 31, 38, 0.1);
+  color: var(--red-600);
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ===== 提示 ===== */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 120;
+  transform: translate(-50%, 20px);
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: rgba(43, 5, 7, 0.92);
+  color: #fff;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  max-width: min(90vw, 520px);
+  text-align: center;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.error { background: rgba(184, 31, 38, 0.96); }
+
+/* ===== 我的页面 ===== */
+.me-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 26px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.me-card .avatar { width: 66px; height: 66px; font-size: 30px; }
+.me-card .me-name { font-size: 26px; font-weight: 700; font-family: "Songti SC", "STSong", serif; }
+.me-card .me-login { font-size: 13px; color: var(--ink-soft); font-family: ui-monospace, Consolas, monospace; }
+.me-card .me-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; }
+
+.panel {
+  margin-top: 22px;
+  padding: 22px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.panel h3 { font-size: 19px; margin-bottom: 14px; }
+
+.app-list { display: flex; flex-direction: column; gap: 12px; }
+.app-item {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--red-400);
+  border-radius: 12px;
+  background: #fffdfa;
+}
+.app-item .app-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.app-item .app-master { font-weight: 700; font-size: 16px; }
+.app-item .app-time { margin-left: auto; font-size: 12px; color: var(--ink-soft); }
+.app-item .app-note { margin-top: 6px; font-size: 14px; color: var(--ink-soft); }
+.app-item .app-note b { color: var(--red-700); }
+.app-item[data-status="approved"] { border-left-color: var(--green); }
+.app-item[data-status="rejected"] { border-left-color: var(--grey); }
+.app-item[data-status="later"] { border-left-color: var(--gold-500); }
+
+.status-pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(184, 31, 38, 0.1);
+  color: var(--red-700);
+}
+.status-pill.approved { background: rgba(47, 125, 79, 0.12); color: var(--green); }
+.status-pill.rejected { background: rgba(156, 145, 140, 0.18); color: #6f6560; }
+.status-pill.later { background: rgba(217, 169, 78, 0.18); color: #8a6520; }
+
+/* ===== 管理端 ===== */
+.admin-header .tabs { display: flex; gap: 8px; margin-left: clamp(10px, 3vw, 40px); }
+.tab-btn {
+  padding: 8px 22px;
+  border: 1px solid rgba(243, 220, 168, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 248, 240, 0.82);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.tab-btn.active { background: var(--gold-400); border-color: transparent; color: var(--red-900); }
+
+.admin-main { max-width: 1100px; margin: 0 auto; padding: 30px clamp(16px, 4vw, 40px) 90px; }
+
+.seg-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.seg-group { display: flex; gap: 8px; }
+.seg-btn {
+  padding: 8px 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: var(--ink-soft);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.seg-btn.active {
+  background: linear-gradient(135deg, var(--red-500), var(--red-700));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(155, 26, 31, 0.25);
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.stat {
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.stat span { display: block; font-size: 12px; color: var(--ink-soft); letter-spacing: 0.08em; }
+.stat strong { font-size: 26px; color: var(--red-700); font-family: Georgia, serif; }
+
+.admin-section-title { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
+.admin-section-title h3 { font-size: 19px; }
+.admin-section-title .count { font-size: 13px; color: var(--ink-soft); }
+
+.app-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.app-card .who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.app-card .who .name { font-size: 18px; font-weight: 700; }
+.app-card .login-name {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f6efe7;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  color: #7a5c33;
+}
+.app-card .meta { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+.app-card .meta b { color: var(--red-700); font-weight: 600; }
+.app-card .user-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--gold-400);
+  background: #fdf8ee;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: #6a5330;
+}
+.app-card .actions { display: flex; flex-direction: column; gap: 8px; min-width: 118px; }
+.app-card .done-note { font-size: 13px; color: var(--ink-soft); }
+.app-card .done-note b { color: var(--red-700); }
+
+.master-admin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.master-admin-card.is-off { background: #faf8f6; }
+.master-admin-card .admin-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+
+.switch-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); }
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #d8d0ca;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex: 0 0 auto;
+  border: 0;
+  padding: 0;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+.switch.on { background: var(--green); }
+.switch.on::after { transform: translateX(20px); }
+
+.fab {
+  position: fixed;
+  right: clamp(18px, 4vw, 46px);
+  bottom: clamp(18px, 4vw, 40px);
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--red-500), var(--red-700));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(122, 17, 23, 0.4);
+  transition: transform 0.18s ease;
+}
+.fab:hover { transform: translateY(-2px); }
+
+.sub-tabs { display: flex; gap: 8px; margin: 0 0 16px; flex-wrap: wrap; }
+.sub-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: var(--ink-soft);
+  font-size: 13px;
+  cursor: pointer;
+}
+.sub-tab.active { background: var(--red-600); border-color: var(--red-600); color: #fff; }
+
+.muted { color: var(--ink-soft); }
+.mono { font-family: ui-monospace, Consolas, monospace; }
+.center { text-align: center; }
+.mt-16 { margin-top: 16px; }
+
+footer.site-footer {
+  padding: 26px;
+  text-align: center;
+  font-size: 12px;
+  color: #9c8d84;
+  border-top: 1px solid var(--line);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 720px) {
+  .site-header { padding: 12px 16px; }
+  .brand { font-size: 17px; gap: 8px; }
+  .brand-seal { width: 32px; height: 32px; font-size: 18px; }
+  .app-card { grid-template-columns: 1fr; }
+  .app-card .actions { flex-direction: row; flex-wrap: wrap; }
+  .me-card .me-actions { margin-left: 0; width: 100%; }
+  .hero .hero-meta { gap: 14px; }
+  .admin-header .tabs { margin-left: 0; }
+}
+
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#home">
+      <span class="brand-seal">帥</span>
+      <span>18码象棋平台</span>
+      <span class="brand-tag" id="brandTag" hidden>管理端</span>
+    </a>
+    <div class="header-actions" id="headerActions"></div>
+  </header>
+
+  <!-- ========== 用户端：大师列表 ========== -->
+  <main class="page" id="view-home">
+    <section class="hero">
+      <span class="eyebrow">CHINESE CHESS · 一对一指导</span>
+      <h1>找一位象棋大师，认真下一盘</h1>
+      <p>平台上的每位大师都提供 10 分钟为一节的在线指导。选择大师、提交预约，大师确认后会给你留言。</p>
+      <div class="hero-meta">
+        <div><strong id="heroCount">—</strong> 位大师在列</div>
+        <div><strong id="heroOnline">—</strong> 位当前可约</div>
+        <div>10 分钟 / 节</div>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>当前象棋大师</h2>
+      <span class="hint">在岗时间内可提交预约</span>
+    </div>
+
+    <div class="master-grid" id="masterGrid">
+      <div class="empty">正在加载大师列表…</div>
+    </div>
+  </main>
+
+  <!-- ========== 我的 ========== -->
+  <main class="page" id="view-me" hidden>
+    <section class="me-card">
+      <div class="avatar" id="meAvatar">—</div>
+      <div>
+        <div class="me-name" id="meName">加载中…</div>
+        <div class="me-login">登录名：<span id="meLogin">—</span></div>
+      </div>
+      <div class="me-actions">
+        <button class="btn btn-gold" id="enterAdminBtn">进入管理端</button>
+        <button class="btn btn-soft" id="meLogoutBtn">退出登录</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>我的预约</h3>
+      <div class="app-list" id="myAppList">
+        <div class="empty">正在加载…</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== 管理端 ========== -->
+  <section class="admin-main" id="view-admin" hidden>
+    <div class="seg-tabs">
+      <div class="seg-group">
+        <button class="seg-btn active" data-admin-tab="apps">预约</button>
+        <button class="seg-btn" data-admin-tab="masters">大师</button>
+      </div>
+      <button class="btn btn-soft btn-sm" id="adminExitBtn">退出管理端</button>
+    </div>
+
+    <div id="adminTabApps">
+      <div class="stat-row">
+        <div class="stat"><span>待处理</span><strong id="statPending">0</strong></div>
+        <div class="stat"><span>已同意</span><strong id="statApproved">0</strong></div>
+        <div class="stat"><span>稍后</span><strong id="statLater">0</strong></div>
+        <div class="stat"><span>已拒绝</span><strong id="statRejected">0</strong></div>
+      </div>
+
+      <div class="admin-section-title">
+        <h3>待处理申请</h3>
+        <span class="count" id="pendingCount"></span>
+      </div>
+      <div id="pendingList"><div class="empty">正在加载…</div></div>
+
+      <div class="admin-section-title">
+        <h3>已处理记录</h3>
+        <span class="count">只读</span>
+      </div>
+      <div id="historyList"><div class="empty">暂无记录</div></div>
+    </div>
+
+    <div id="adminTabMasters" hidden>
+      <div class="admin-section-title">
+        <h3>全部大师</h3>
+        <span class="count" id="masterCount"></span>
+      </div>
+      <div class="master-grid" id="adminMasterGrid"><div class="empty">正在加载…</div></div>
+    </div>
+  </section>
+
+  <footer class="site-footer">18码象棋平台 · 以棋会友，落子无悔</footer>
+
+  <button class="fab" id="addMasterBtn" hidden>＋ 新添大师</button>
+
+  <!-- 登录 -->
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal">
+      <h3>登录</h3>
+      <p class="modal-sub">使用平台账号登录后即可预约大师。</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginName">登录名</label>
+          <input id="loginName" autocomplete="username" placeholder="请输入登录名" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" required />
+          <div class="help">演示账号：demo / 123456（后续可在数据库中添加）</div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-soft" data-close="loginModal">取消</button>
+          <button type="submit" class="btn">登录</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理密码 -->
+  <div class="modal-backdrop" id="adminModal">
+    <div class="modal">
+      <h3>进入管理端</h3>
+      <p class="modal-sub">请输入管理密码。仅平台管理员可进入。</p>
+      <form id="adminForm">
+        <div class="field">
+          <label for="adminPassword">管理密码</label>
+          <input id="adminPassword" type="password" autocomplete="off" placeholder="请输入管理密码" required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-soft" data-close="adminModal">取消</button>
+          <button type="submit" class="btn">确认进入</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 申请 -->
+  <div class="modal-backdrop" id="applyModal">
+    <div class="modal">
+      <h3>提交预约</h3>
+      <p class="modal-sub" id="applySub">—</p>
+      <form id="applyForm">
+        <div class="field">
+          <label for="applyNote">想练什么（选填）</label>
+          <textarea id="applyNote" maxlength="500" placeholder="例如：想练中局攻杀，希望大师多讲思路"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-soft" data-close="applyModal">取消</button>
+          <button type="submit" class="btn">发送申请</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 处理申请 -->
+  <div class="modal-backdrop" id="respondModal">
+    <div class="modal">
+      <h3 id="respondTitle">处理申请</h3>
+      <p class="modal-sub" id="respondSub">—</p>
+      <form id="respondForm">
+        <div class="field">
+          <label for="respondNote">备注（必填，会发送给用户）</label>
+          <textarea id="respondNote" maxlength="500" placeholder="例如：周六下午 2 点可以，请提前十分钟进房间" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-soft" data-close="respondModal">取消</button>
+          <button type="submit" class="btn" id="respondSubmit">确认</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 新添 / 编辑大师 -->
+  <div class="modal-backdrop" id="masterModal">
+    <div class="modal">
+      <h3 id="masterModalTitle">新添大师</h3>
+      <p class="modal-sub">填写大师信息与每周在岗时间。</p>
+      <form id="masterForm">
+        <div class="field-row">
+          <div class="field">
+            <label for="masterName">大师名称</label>
+            <input id="masterName" maxlength="40" placeholder="例如：赵德海" required />
+          </div>
+          <div class="field">
+            <label for="masterPrice">单次指导价格（元 / 10 分钟）</label>
+            <input id="masterPrice" type="number" min="0" step="1" placeholder="30" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>每周在岗时间（星期可多选）</label>
+          <div class="weekday-picker" id="weekdayPicker">
+            <button type="button" data-wd="1">周一</button>
+            <button type="button" data-wd="2">周二</button>
+            <button type="button" data-wd="3">周三</button>
+            <button type="button" data-wd="4">周四</button>
+            <button type="button" data-wd="5">周五</button>
+            <button type="button" data-wd="6">周六</button>
+            <button type="button" data-wd="7">周日</button>
+          </div>
+          <div class="field-row mt-16">
+            <div class="field" style="margin-bottom:0">
+              <label for="slotStart">开始时间</label>
+              <input id="slotStart" type="time" value="19:00" required />
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label for="slotEnd">结束时间</label>
+              <input id="slotEnd" type="time" value="21:00" required />
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm mt-16" id="addSlotBtn">添加时间段</button>
+          <div class="help">选中的每个星期都会生成同一时段的排班；可添加多段。</div>
+          <div class="slot-list" id="slotList"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-soft" data-close="masterModal">取消</button>
+          <button type="submit" class="btn" id="masterSubmit">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+/* 离线演示层：没有后端接口时，用 localStorage 模拟 /api，保证 index.html 双击可用。
+   部署到有后端的服务器时，真实接口返回 JSON 就直接走真实接口。 */
+(() => {
+  const KEY = 'xq18_platform_db_v1';
+  const ADMIN_PASSWORD = '114514';
+  const WEEKDAYS = { 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六', 7: '周日' };
+  const STATUS_TEXT = { pending: '待处理', later: '稍后', approved: '已同意', rejected: '已拒绝' };
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = (d = new Date()) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+  function seed() {
+    return {
+      version: 1,
+      users: [
+        { id: 1, login_name: 'demo', display_name: '张三', password: '123456' },
+        { id: 2, login_name: 'chess01', display_name: '李四', password: '123456' },
+      ],
+      masters: [
+        {
+          id: 1, name: '赵德海', price: 30, active: 1,
+          slots: [
+            { weekday: 1, start_time: '19:00', end_time: '21:30' },
+            { weekday: 3, start_time: '19:00', end_time: '21:30' },
+            { weekday: 5, start_time: '19:00', end_time: '21:30' },
+            { weekday: 6, start_time: '14:00', end_time: '18:00' },
+          ],
+        },
+        {
+          id: 2, name: '孙玉峰', price: 50, active: 1,
+          slots: [
+            { weekday: 5, start_time: '19:00', end_time: '21:30' },
+            { weekday: 6, start_time: '14:00', end_time: '18:00' },
+            { weekday: 7, start_time: '14:00', end_time: '18:00' },
+          ],
+        },
+      ],
+      applications: [
+        {
+          id: 1, user_id: 2, master_id: 1, master_name: '赵德海', status: 'pending',
+          user_note: '想练一下中局攻杀，周六下午可以吗？', admin_note: '',
+          created_at: stamp(), updated_at: stamp(),
+        },
+      ],
+      session: null,
+    };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const db = JSON.parse(raw);
+        if (db && db.version === 1 && Array.isArray(db.users)) return db;
+      }
+    } catch (e) { /* ignore */ }
+    const db = seed();
+    save(db);
+    return db;
+  }
+
+  function save(db) {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* ignore */ }
+  }
+
+  let db = load();
+
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+
+  const bodyOf = (init) => {
+    try { return init && init.body ? JSON.parse(init.body) : {}; } catch (e) { return {}; }
+  };
+
+  const toMinutes = (t) => {
+    const [h, m] = String(t).split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  function nowParts(d = new Date()) {
+    return { weekday: d.getDay() === 0 ? 7 : d.getDay(), minutes: d.getHours() * 60 + d.getMinutes() };
+  }
+
+  function withinSlots(slots, d = new Date()) {
+    if (!slots || slots.length === 0) return true;
+    const { weekday, minutes } = nowParts(d);
+    for (const s of slots) {
+      const start = toMinutes(s.start_time);
+      const end = toMinutes(s.end_time);
+      if (start <= end) {
+        if (s.weekday === weekday && minutes >= start && minutes < end) return true;
+      } else {
+        if (s.weekday === weekday && minutes >= start) return true;
+        const prev = weekday === 1 ? 7 : weekday - 1;
+        if (s.weekday === prev && minutes < end) return true;
+      }
+    }
+    return false;
+  }
+
+  function mastersOut() {
+    return db.masters.map((m) => {
+      const active = !!m.active;
+      const inTime = withinSlots(m.slots);
+      return {
+        id: m.id, name: m.name, price: m.price, active,
+        slots: m.slots, available_now: active && inTime,
+        reason: !active ? 'master_off' : inTime ? '' : 'outside_hours',
+      };
+    });
+  }
+
+  function currentUser() {
+    if (!db.session) return null;
+    return db.users.find((u) => u.id === db.session.userId) || null;
+  }
+
+  function requireUser() {
+    const u = currentUser();
+    return u ? u : null;
+  }
+
+  function nextId(list) {
+    return list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+  }
+
+  function normalizeSlots(input) {
+    if (!Array.isArray(input)) return [];
+    const out = [];
+    for (const raw of input) {
+      const weekday = Number(raw.weekday);
+      const start_time = String(raw.start_time || raw.start || '').trim();
+      const end_time = String(raw.end_time || raw.end || '').trim();
+      if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) throw new Error('星期参数不合法');
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start_time) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end_time)) {
+        throw new Error('时间格式应为 HH:MM');
+      }
+      if (start_time === end_time) throw new Error('开始时间与结束时间不能相同');
+      out.push({ weekday, start_time, end_time });
+    }
+    return out;
+  }
+
+  function applicationsOut(userId) {
+    return db.applications
+      .filter((a) => (userId ? a.user_id === userId : true))
+      .sort((a, b) => b.id - a.id)
+      .map((a) => {
+        const u = db.users.find((x) => x.id === a.user_id);
+        return {
+          ...a,
+          status_text: STATUS_TEXT[a.status] || a.status,
+          display_name: u ? u.display_name : '',
+          login_name: u ? u.login_name : '',
+        };
+      });
+  }
+
+  function handle(urlStr, init) {
+    const method = (init && init.method) || 'GET';
+    const url = new URL(urlStr, 'http://local');
+    const path = url.pathname;
+    const body = bodyOf(init);
+
+    /* ---- 会话 ---- */
+    if (path === '/api/login' && method === 'POST') {
+      const u = db.users.find((x) => x.login_name === String(body.login_name || '').trim());
+      if (!u || u.password !== String(body.password || '')) return json({ error: '登录名或密码错误' }, 401);
+      db.session = { userId: u.id, isAdmin: false };
+      save(db);
+      return json({ user: { id: u.id, login_name: u.login_name, display_name: u.display_name } });
+    }
+
+    if (path === '/api/logout' && method === 'POST') {
+      db.session = null;
+      save(db);
+      return json({ ok: true });
+    }
+
+    if (path === '/api/me' && method === 'GET') {
+      const u = currentUser();
+      return json({
+        user: u ? { id: u.id, login_name: u.login_name, display_name: u.display_name } : null,
+        is_admin: !!(db.session && db.session.isAdmin),
+      });
+    }
+
+    /* ---- 大师列表 ---- */
+    if (path === '/api/masters' && method === 'GET') {
+      return json({ masters: mastersOut(), server_time: stamp() });
+    }
+
+    /* ---- 用户申请 ---- */
+    if (path === '/api/applications' && method === 'POST') {
+      const u = requireUser();
+      if (!u) return json({ error: '请先登录' }, 401);
+      const master = db.masters.find((m) => m.id === Number(body.master_id));
+      if (!master) return json({ error: '大师不存在' }, 404);
+      if (!master.active) return json({ error: '该大师当前不在岗，暂不可预约' }, 409);
+      if (!withinSlots(master.slots)) return json({ error: '当前不在该大师的在岗时间内' }, 409);
+      const pending = db.applications.find(
+        (a) => a.user_id === u.id && a.master_id === master.id && a.status === 'pending'
+      );
+      if (pending) return json({ error: '你已有一条待处理的申请，请等待大师回复' }, 409);
+      const item = {
+        id: nextId(db.applications), user_id: u.id, master_id: master.id, master_name: master.name,
+        status: 'pending', user_note: String(body.note || '').slice(0, 500), admin_note: '',
+        created_at: stamp(), updated_at: stamp(),
+      };
+      db.applications.push(item);
+      save(db);
+      return json({ ok: true, id: item.id });
+    }
+
+    if (path === '/api/my/applications' && method === 'GET') {
+      const u = requireUser();
+      if (!u) return json({ error: '请先登录' }, 401);
+      return json({ applications: applicationsOut(u.id) });
+    }
+
+    /* ---- 管理端 ---- */
+    if (path === '/api/admin/login' && method === 'POST') {
+      if (!requireUser()) return json({ error: '请先登录' }, 401);
+      if (String(body.password || '') !== ADMIN_PASSWORD) return json({ error: '管理密码错误' }, 401);
+      db.session.isAdmin = true;
+      save(db);
+      return json({ ok: true });
+    }
+
+    if (path === '/api/admin/logout' && method === 'POST') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      db.session.isAdmin = false;
+      save(db);
+      return json({ ok: true });
+    }
+
+    if (path === '/api/admin/applications' && method === 'GET') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const status = url.searchParams.get('status') || 'all';
+      const list = applicationsOut().filter((a) => (status === 'all' ? true : a.status === status));
+      const counts = { pending: 0, later: 0, approved: 0, rejected: 0 };
+      for (const a of db.applications) counts[a.status] = (counts[a.status] || 0) + 1;
+      list.sort((a, b) => (a.status === 'pending' ? -1 : 1) - (b.status === 'pending' ? -1 : 1) || b.id - a.id);
+      return json({ applications: list, counts });
+    }
+
+    const respond = path.match(/^\/api\/admin\/applications\/(\d+)\/respond$/);
+    if (respond && method === 'POST') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const item = db.applications.find((a) => a.id === Number(respond[1]));
+      if (!item) return json({ error: '申请不存在' }, 404);
+      const map = { later: 'later', reject: 'rejected', approve: 'approved' };
+      const next = map[body.action];
+      if (!next) return json({ error: '操作不合法' }, 400);
+      const note = String(body.note || '').trim();
+      if (!note) return json({ error: '请填写备注' }, 400);
+      item.status = next;
+      item.admin_note = note.slice(0, 500);
+      item.updated_at = stamp();
+      save(db);
+      return json({ ok: true, status: next });
+    }
+
+    if (path === '/api/admin/masters' && method === 'GET') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      return json({ masters: mastersOut() });
+    }
+
+    if (path === '/api/admin/masters' && method === 'POST') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const name = String(body.name || '').trim();
+      const price = Number(body.price);
+      if (!name) return json({ error: '请填写大师名称' }, 400);
+      if (!Number.isFinite(price) || price < 0) return json({ error: '价格不合法' }, 400);
+      let slots;
+      try { slots = normalizeSlots(body.slots); } catch (e) { return json({ error: e.message }, 400); }
+      const item = { id: nextId(db.masters), name: name.slice(0, 40), price: Math.round(price), active: 1, slots };
+      db.masters.push(item);
+      save(db);
+      return json({ ok: true, id: item.id });
+    }
+
+    const masterMatch = path.match(/^\/api\/admin\/masters\/(\d+)$/);
+    if (masterMatch && method === 'PUT') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const item = db.masters.find((m) => m.id === Number(masterMatch[1]));
+      if (!item) return json({ error: '大师不存在' }, 404);
+      const name = String(body.name || '').trim();
+      const price = Number(body.price);
+      if (!name) return json({ error: '请填写大师名称' }, 400);
+      if (!Number.isFinite(price) || price < 0) return json({ error: '价格不合法' }, 400);
+      let slots;
+      try { slots = normalizeSlots(body.slots); } catch (e) { return json({ error: e.message }, 400); }
+      item.name = name.slice(0, 40);
+      item.price = Math.round(price);
+      item.slots = slots;
+      save(db);
+      return json({ ok: true });
+    }
+
+    if (masterMatch && method === 'DELETE') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const id = Number(masterMatch[1]);
+      db.masters = db.masters.filter((m) => m.id !== id);
+      for (const a of db.applications) if (a.master_id === id) a.master_id = null;
+      save(db);
+      return json({ ok: true });
+    }
+
+    const activeMatch = path.match(/^\/api\/admin\/masters\/(\d+)\/active$/);
+    if (activeMatch && method === 'PATCH') {
+      if (!db.session || !db.session.isAdmin) return json({ error: '没有管理端权限' }, 403);
+      const item = db.masters.find((m) => m.id === Number(activeMatch[1]));
+      if (!item) return json({ error: '大师不存在' }, 404);
+      item.active = body.active ? 1 : 0;
+      save(db);
+      return json({ ok: true, active: !!item.active });
+    }
+
+    return json({ error: '接口不存在' }, 404);
+  }
+
+  const realFetch = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
+
+  window.fetch = async function (input, init = {}) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (!url.includes('/api/')) {
+      if (realFetch) return realFetch(input, init);
+      throw new Error('网络不可用');
+    }
+    if (realFetch) {
+      try {
+        const res = await realFetch(input, init);
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (ct.includes('application/json')) return res;
+      } catch (e) { /* 离线或 file://，走本地模拟 */ }
+    }
+    return handle(url, init);
+  };
+
+  // 调试用：控制台可执行 localStorage.removeItem('xq18_platform_db_v1') 后刷新，恢复演示数据
+})();
+
+</script>
+<script>
+(() => {
+  /* Supabase 适配层：把 /api/* 的请求翻译成 Supabase RPC。
+     优先级：加盟商自己的 Node 后端 → 这里 → 他原来的离线模拟。
+     账号沿用班级平台（app_users），所以学生用班级平台的登录名密码就能进。 */
+  const SUPA_URL = 'https://hkmxmkujzikcgrnlrxit.supabase.co';
+  const SUPA_KEY = 'sb_publishable_eK9SJy7QLl9WLpcXKncHmw_U0GTsPVw';
+  const TOKEN_KEY = 'xq18_token_v1';
+
+  if (!window.supabase) return;
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  const lowerFetch = window.fetch.bind(window);
+
+  const token = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+  const setToken = (t) => {
+    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+  };
+
+  const reply = (data, status = 200) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (k) => (String(k).toLowerCase() === 'content-type' ? 'application/json' : null) },
+    json: async () => data,
+    text: async () => JSON.stringify(data)
+  });
+
+  async function rpc(fn, params) {
+    const res = await sb.rpc(fn, params || {});
+    if (res.error) throw new Error(res.error.message || '数据库连接失败');
+    const d = res.data;
+    if (!d || d.ok === false) {
+      const err = new Error((d && d.error) || '操作失败');
+      err.app = true;                       // 业务错误：不要退回离线模拟
+      throw err;
+    }
+    return d;
+  }
+
+  async function handle(urlStr, init) {
+    const method = (init.method || 'GET').toUpperCase();
+    const u = new URL(urlStr, 'http://local');
+    const path = u.pathname;
+    let body = {};
+    if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = {}; } }
+
+    /* ---------- 账号 ---------- */
+    if (path === '/api/login' && method === 'POST') {
+      const d = await rpc('api_login', {
+        p_username: String(body.login_name || '').trim(),
+        p_password: String(body.password || '')
+      });
+      setToken(d.token);
+      return reply({
+        user: {
+          id: d.profile.id,
+          login_name: d.profile.username,
+          display_name: d.profile.display_name || d.profile.username
+        }
+      });
+    }
+
+    if (path === '/api/logout' && method === 'POST') {
+      if (token()) { try { await rpc('api_logout', { p_token: token() }); } catch (e) {} }
+      setToken('');
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/me' && method === 'GET') {
+      if (!token()) return reply({ user: null, is_admin: false });
+      const d = await rpc('api_xq_me', { p_token: token() });
+      return reply({ user: d.user, is_admin: !!d.is_admin });
+    }
+
+    /* ---------- 大师列表 ---------- */
+    if (path === '/api/masters' && method === 'GET') {
+      const d = await rpc('api_xq_masters', { p_token: token() });
+      return reply({ masters: d.masters, server_time: d.server_time });
+    }
+
+    /* ---------- 申请 ---------- */
+    if (path === '/api/applications' && method === 'POST') {
+      const d = await rpc('api_xq_apply', {
+        p_token: token(),
+        p_master_id: Number(body.master_id),
+        p_note: String(body.note || '')
+      });
+      return reply({ ok: true, id: d.id });
+    }
+
+    if (path === '/api/my/applications' && method === 'GET') {
+      const d = await rpc('api_xq_my_apps', { p_token: token() });
+      return reply({ applications: d.applications });
+    }
+
+    /* ---------- 管理端 ---------- */
+    if (path === '/api/admin/login' && method === 'POST') {
+      await rpc('api_xq_admin_login', { p_token: token(), p_password: String(body.password || '') });
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/admin/logout' && method === 'POST') {
+      try { await rpc('api_xq_admin_logout', { p_token: token() }); } catch (e) {}
+      return reply({ ok: true });
+    }
+
+    if (path === '/api/admin/applications' && method === 'GET') {
+      const d = await rpc('api_xq_admin_apps', {
+        p_token: token(),
+        p_status: u.searchParams.get('status') || 'all'
+      });
+      return reply({ applications: d.applications, counts: d.counts });
+    }
+
+    const respond = path.match(/^\/api\/admin\/applications\/(\d+)\/respond$/);
+    if (respond && method === 'POST') {
+      const d = await rpc('api_xq_admin_respond', {
+        p_token: token(),
+        p_id: Number(respond[1]),
+        p_action: String(body.action || ''),
+        p_note: String(body.note || '')
+      });
+      return reply({ ok: true, status: d.status });
+    }
+
+    if (path === '/api/admin/masters' && method === 'GET') {
+      const d = await rpc('api_xq_admin_masters', { p_token: token() });
+      return reply({ masters: d.masters });
+    }
+
+    if (path === '/api/admin/masters' && method === 'POST') {
+      const d = await rpc('api_xq_admin_master_save', {
+        p_token: token(), p_id: null,
+        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
+        p_slots: Array.isArray(body.slots) ? body.slots : []
+      });
+      return reply({ ok: true, id: d.id });
+    }
+
+    const masterOne = path.match(/^\/api\/admin\/masters\/(\d+)$/);
+    if (masterOne && method === 'PUT') {
+      await rpc('api_xq_admin_master_save', {
+        p_token: token(), p_id: Number(masterOne[1]),
+        p_name: String(body.name || ''), p_price: Number(body.price) || 0,
+        p_slots: Array.isArray(body.slots) ? body.slots : []
+      });
+      return reply({ ok: true });
+    }
+    if (masterOne && method === 'DELETE') {
+      await rpc('api_xq_admin_master_delete', { p_token: token(), p_id: Number(masterOne[1]) });
+      return reply({ ok: true });
+    }
+
+    const masterActive = path.match(/^\/api\/admin\/masters\/(\d+)\/active$/);
+    if (masterActive && method === 'PATCH') {
+      const d = await rpc('api_xq_admin_master_active', {
+        p_token: token(), p_id: Number(masterActive[1]), p_active: !!body.active
+      });
+      return reply({ ok: true, active: !!d.active });
+    }
+
+    return reply({ error: '接口不存在' }, 404);
+  }
+
+  window.fetch = async function (input, init = {}) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (!url.includes('/api/')) return lowerFetch(input, init);
+
+    // 1) 加盟商的 Node 后端（部署了就能用）
+    try {
+      const res = await lowerFetch(input, init);
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      if (ct.includes('application/json')) return res;
+    } catch (e) { /* 没有后端，继续往下 */ }
+
+    // 2) Supabase
+    try {
+      return await handle(url, init);
+    } catch (e) {
+      const msg = String((e && e.message) || '');
+      const networkDown = /Failed to fetch|NetworkError|Load failed|fetch failed/i.test(msg);
+      if (e && e.app && !networkDown) return reply({ error: msg }, 400);
+      // 3) 连不上 → 退回他原来的离线模拟
+      return lowerFetch(input, init);
+    }
+  };
+})();
+</script>
+<script>
+/* 18码象棋平台 · 单页站点（用户端 + 我的 + 管理端） */
+(() => {
+  const WEEKDAYS = { 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六', 7: '周日' };
+  const STATUS_TEXT = { pending: '待处理', later: '稍后', approved: '已同意', rejected: '已拒绝' };
+
+  const state = {
+    me: { user: null, is_admin: false },
+    view: 'home',
+    masters: [],
+    selectedId: null,
+    applyMaster: null,
+    myApps: [],
+    apps: [],
+    adminMasters: [],
+    adminTab: 'apps',
+    editingId: null,
+    respond: null,
+    slots: [],
+    weekdays: new Set(),
+  };
+
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) =>
+    String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  async function api(url, opts = {}) {
+    const res = await fetch(url, {
+      credentials: 'same-origin',
+      headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+      ...opts,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `请求失败（${res.status}）`);
+    return data;
+  }
+
+  let toastTimer;
+  function toast(msg, isError = false) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.className = isError ? 'show error' : 'show';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (el.className = ''), 2600);
+  }
+
+  const openModal = (id) => document.getElementById(id)?.classList.add('open');
+  const closeModal = (id) => document.getElementById(id)?.classList.remove('open');
+
+  document.querySelectorAll('[data-close]').forEach((btn) =>
+    btn.addEventListener('click', () => closeModal(btn.dataset.close))
+  );
+  document.querySelectorAll('.modal-backdrop').forEach((bg) =>
+    bg.addEventListener('click', (e) => { if (e.target === bg) bg.classList.remove('open'); })
+  );
+
+  /* ================= 顶栏 / 路由 ================= */
+  function renderAuth() {
+    const logged = !!state.me?.user;
+    const area = $('#headerActions');
+    if (logged) {
+      area.innerHTML = `
+        ${state.me.is_admin ? '<a class="btn btn-ghost btn-sm" href="#admin">管理端</a>' : ''}
+        <a class="btn btn-gold btn-sm" href="#me">我的</a>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">退出</button>`;
+      $('#logoutBtn').addEventListener('click', async () => {
+        await api('/api/logout', { method: 'POST' }).catch(() => {});
+        state.me = { user: null, is_admin: false };
+        renderAuth();
+        location.hash = '#home';
+        toast('已退出登录');
+      });
+    } else {
+      area.innerHTML = `<button class="btn btn-ghost" id="loginBtn">登录</button>`;
+      $('#loginBtn').addEventListener('click', () => openModal('loginModal'));
+    }
+  }
+
+  function setView(view) {
+    state.view = view;
+    $('#view-home').hidden = view !== 'home';
+    $('#view-me').hidden = view !== 'me';
+    $('#view-admin').hidden = view !== 'admin';
+    $('#brandTag').hidden = view !== 'admin';
+    updateFab();
+    window.scrollTo(0, 0);
+  }
+
+  function updateFab() {
+    $('#addMasterBtn').hidden = !(state.view === 'admin' && state.adminTab === 'masters');
+  }
+
+  function route() {
+    const hash = (location.hash || '#home').slice(1);
+    if (hash === 'admin') {
+      if (!state.me.user) { location.hash = '#home'; return; }
+      if (!state.me.is_admin) {
+        location.hash = '#me';
+        toast('请先输入管理密码');
+        openModal('adminModal');
+        return;
+      }
+      setView('admin');
+      loadApplications();
+      return;
+    }
+    if (hash === 'me') {
+      if (!state.me.user) { location.hash = '#home'; openModal('loginModal'); return; }
+      setView('me');
+      loadMyApplications();
+      return;
+    }
+    setView('home');
+    loadMasters(true);
+  }
+
+  window.addEventListener('hashchange', route);
+
+  /* ================= 用户端 ================= */
+  function slotText(s) {
+    return `${WEEKDAYS[s.weekday] || ''} ${s.start_time}–${s.end_time}`;
+  }
+
+  function renderMasters() {
+    const grid = $('#masterGrid');
+    const list = state.masters;
+    $('#heroCount').textContent = list.length;
+    $('#heroOnline').textContent = list.filter((m) => m.available_now).length;
+
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty">还没有大师入驻，请稍后再来看看。</div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map((m) => {
+      const off = !m.active;
+      const available = m.available_now;
+      const selected = state.selectedId === m.id;
+      const label = off ? '暂不在岗' : available ? '申请指导' : '不在岗时间';
+      return `
+      <article class="master-card ${off ? 'is-off' : ''}" data-id="${m.id}" style="${selected ? 'border-color:var(--gold-500);box-shadow:0 0 0 2px rgba(217,169,78,.35),var(--shadow)' : ''}">
+        <div class="master-top">
+          <div class="avatar">${esc(m.name.slice(0, 1))}</div>
+          <div>
+            <div class="master-name">${esc(m.name)}</div>
+            <div class="master-sub">象棋大师 · 在线指导</div>
+          </div>
+          <div class="price"><strong>¥${m.price}</strong><small>10 分钟 / 节</small></div>
+        </div>
+        <div class="badges">
+          <span class="badge ${off ? 'badge-off' : 'badge-on'}">${off ? '不在岗' : '在岗'}</span>
+          ${available ? '<span class="badge badge-time">当前可约</span>' : ''}
+        </div>
+        <div class="slots">
+          ${m.slots.length
+            ? m.slots.map((s) => `<span class="slot-chip">${slotText(s)}</span>`).join('')
+            : '<span class="slot-chip">未设置固定时段，全天可约</span>'}
+        </div>
+        <button class="${available ? 'btn' : 'btn btn-grey'}" data-apply="${m.id}" ${available ? '' : 'disabled'}>${label}</button>
+      </article>`;
+    }).join('');
+
+    grid.querySelectorAll('.master-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-apply]')) return;
+        const id = Number(card.dataset.id);
+        state.selectedId = state.selectedId === id ? null : id;
+        renderMasters();
+      });
+    });
+
+    grid.querySelectorAll('[data-apply]').forEach((btn) => {
+      btn.addEventListener('click', () => beginApply(Number(btn.dataset.apply)));
+    });
+  }
+
+  function beginApply(id) {
+    const master = state.masters.find((m) => m.id === id);
+    if (!master) return;
+    if (!master.available_now) {
+      toast(master.active ? '当前不在该大师的在岗时间内' : '该大师当前不在岗', true);
+      return;
+    }
+    state.selectedId = id;
+    renderMasters();
+    if (!state.me.user) {
+      toast('请先登录再预约');
+      openModal('loginModal');
+      return;
+    }
+    state.applyMaster = master;
+    $('#applySub').textContent = `${master.name} · ¥${master.price} / 10 分钟`;
+    $('#applyNote').value = '';
+    openModal('applyModal');
+  }
+
+  async function loadMasters(silent = false) {
+    try {
+      const data = await api('/api/masters');
+      state.masters = data.masters;
+      if (state.view === 'home') renderMasters();
+    } catch (err) {
+      if (!silent) {
+        $('#masterGrid').innerHTML = `<div class="empty">加载失败：${esc(err.message)}</div>`;
+      }
+    }
+  }
+
+  /* ================= 我的 ================= */
+  async function loadMyApplications() {
+    try {
+      const { applications } = await api('/api/my/applications');
+      state.myApps = applications;
+      renderMyApplications();
+    } catch (err) {
+      $('#myAppList').innerHTML = `<div class="empty">加载失败：${esc(err.message)}</div>`;
+    }
+  }
+
+  function renderMyApplications() {
+    const box = $('#myAppList');
+    if (!state.myApps.length) {
+      box.innerHTML = `<div class="empty">还没有预约。回首页挑一位大师吧。</div>`;
+      return;
+    }
+    box.innerHTML = state.myApps.map((a) => `
+      <article class="app-item" data-status="${a.status}">
+        <div class="app-head">
+          <span class="app-master">${esc(a.master_name)}</span>
+          <span class="status-pill ${a.status}">${esc(a.status_text || STATUS_TEXT[a.status] || a.status)}</span>
+          <span class="app-time">${esc(a.created_at)}</span>
+        </div>
+        ${a.user_note ? `<div class="app-note">我的留言：${esc(a.user_note)}</div>` : ''}
+        ${a.admin_note
+          ? `<div class="app-note">大师回复：<b>${esc(a.admin_note)}</b></div>`
+          : '<div class="app-note">等待大师回复…</div>'}
+      </article>`).join('');
+  }
+
+  /* ================= 管理端：预约 ================= */
+  async function loadApplications() {
+    try {
+      const data = await api('/api/admin/applications?status=all');
+      state.apps = data.applications;
+      renderApplications(data.counts);
+    } catch (err) {
+      $('#pendingList').innerHTML = `<div class="empty">加载失败：${esc(err.message)}</div>`;
+    }
+  }
+
+  function renderApplications(counts = {}) {
+    const pending = state.apps.filter((a) => a.status === 'pending');
+    const done = state.apps.filter((a) => a.status !== 'pending');
+
+    $('#statPending').textContent = counts.pending ?? pending.length;
+    $('#statApproved').textContent = counts.approved ?? 0;
+    $('#statLater').textContent = counts.later ?? 0;
+    $('#statRejected').textContent = counts.rejected ?? 0;
+    $('#pendingCount').textContent = `${pending.length} 条`;
+
+    $('#pendingList').innerHTML = pending.length
+      ? pending.map((a) => `
+        <article class="app-card">
+          <div>
+            <div class="who">
+              <span class="name">${esc(a.display_name)}</span>
+              <span class="login-name">${esc(a.login_name)}</span>
+              <span class="status-pill">待处理</span>
+            </div>
+            <div class="meta">申请大师：<b>${esc(a.master_name)}</b> · 提交于 ${esc(a.created_at)}</div>
+            ${a.user_note ? `<div class="user-note">用户留言：${esc(a.user_note)}</div>` : '<div class="user-note">用户未留言</div>'}
+          </div>
+          <div class="actions">
+            <button class="btn btn-sm btn-gold" data-respond="${a.id}" data-act="later">稍后</button>
+            <button class="btn btn-sm btn-danger" data-respond="${a.id}" data-act="reject">拒绝</button>
+            <button class="btn btn-sm" data-respond="${a.id}" data-act="approve">同意</button>
+          </div>
+        </article>`).join('')
+      : `<div class="empty">暂无待处理申请。</div>`;
+
+    $('#historyList').innerHTML = done.length
+      ? done.map((a) => `
+        <article class="app-card">
+          <div>
+            <div class="who">
+              <span class="name">${esc(a.display_name)}</span>
+              <span class="login-name">${esc(a.login_name)}</span>
+              <span class="status-pill ${a.status}">${esc(a.status_text || STATUS_TEXT[a.status] || a.status)}</span>
+            </div>
+            <div class="meta">申请大师：<b>${esc(a.master_name)}</b> · 提交于 ${esc(a.created_at)} · 处理于 ${esc(a.updated_at)}</div>
+            <div class="done-note">备注：<b>${esc(a.admin_note || '—')}</b></div>
+          </div>
+          <div></div>
+        </article>`).join('')
+      : `<div class="empty">暂无记录。</div>`;
+
+    document.querySelectorAll('[data-respond]').forEach((btn) => {
+      btn.addEventListener('click', () => openRespond(Number(btn.dataset.respond), btn.dataset.act));
+    });
+  }
+
+  function openRespond(id, action) {
+    const app = state.apps.find((a) => a.id === id);
+    if (!app) return;
+    state.respond = { id, action };
+    const map = {
+      later: { title: '稍后处理', btn: '确认稍后', cls: 'btn btn-gold' },
+      reject: { title: '拒绝申请', btn: '确认拒绝', cls: 'btn btn-danger' },
+      approve: { title: '同意申请', btn: '确认同意', cls: 'btn' },
+    }[action];
+    $('#respondTitle').textContent = map.title;
+    $('#respondSub').textContent = `${app.display_name}（${app.login_name}） → ${app.master_name}`;
+    $('#respondNote').value = '';
+    $('#respondSubmit').textContent = map.btn;
+    $('#respondSubmit').className = map.cls;
+    openModal('respondModal');
+    setTimeout(() => $('#respondNote').focus(), 50);
+  }
+
+  /* ================= 管理端：大师 ================= */
+  async function loadAdminMasters() {
+    try {
+      const data = await api('/api/admin/masters');
+      state.adminMasters = data.masters;
+      renderAdminMasters();
+    } catch (err) {
+      $('#adminMasterGrid').innerHTML = `<div class="empty">加载失败：${esc(err.message)}</div>`;
+    }
+  }
+
+  function renderAdminMasters() {
+    const box = $('#adminMasterGrid');
+    $('#masterCount').textContent = `${state.adminMasters.length} 位`;
+    if (!state.adminMasters.length) {
+      box.innerHTML = `<div class="empty">还没有大师，点击右下角「新添大师」。</div>`;
+      return;
+    }
+    box.innerHTML = state.adminMasters.map((m) => `
+      <article class="master-admin-card ${m.active ? '' : 'is-off'}">
+        <div class="master-top">
+          <div class="avatar">${esc(m.name.slice(0, 1))}</div>
+          <div>
+            <div class="master-name">${esc(m.name)}</div>
+            <div class="master-sub">¥${m.price} / 10 分钟</div>
+          </div>
+          <div class="price">
+            <span class="badge ${m.active ? 'badge-on' : 'badge-off'}">${m.active ? '在岗' : '不在岗'}</span>
+          </div>
+        </div>
+        <div class="slots">
+          ${m.slots.length
+            ? m.slots.map((s) => `<span class="slot-chip">${WEEKDAYS[s.weekday]} ${s.start_time}–${s.end_time}</span>`).join('')
+            : '<span class="slot-chip">未设置时段（全天可约）</span>'}
+        </div>
+        <div class="switch-row">
+          <button class="switch ${m.active ? 'on' : ''}" data-toggle="${m.id}" aria-label="切换在岗状态"></button>
+          <span>${m.active ? '当前在岗，用户可预约' : '当前不在岗，用户申请按钮为灰色'}</span>
+        </div>
+        <div class="admin-card-actions">
+          <button class="btn btn-sm btn-soft" data-edit="${m.id}">编辑</button>
+          <button class="btn btn-sm btn-danger" data-del="${m.id}">删除</button>
+        </div>
+      </article>`).join('');
+
+    box.querySelectorAll('[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const m = state.adminMasters.find((x) => x.id === Number(btn.dataset.toggle));
+        try {
+          await api(`/api/admin/masters/${m.id}/active`, {
+            method: 'PATCH',
+            body: JSON.stringify({ active: !m.active }),
+          });
+          toast(m.active ? '已设为不在岗' : '已恢复在岗');
+          loadAdminMasters();
+          loadMasters(true);
+        } catch (err) {
+          toast(err.message, true);
+        }
+      });
+    });
+
+    box.querySelectorAll('[data-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => openMasterModal(state.adminMasters.find((x) => x.id === Number(btn.dataset.edit))));
+    });
+
+    box.querySelectorAll('[data-del]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const m = state.adminMasters.find((x) => x.id === Number(btn.dataset.del));
+        if (!confirm(`确定删除大师「${m.name}」？\n历史预约会保留，但用户端不再显示该大师。`)) return;
+        try {
+          await api(`/api/admin/masters/${m.id}`, { method: 'DELETE' });
+          toast('大师已删除');
+          loadAdminMasters();
+          loadMasters(true);
+        } catch (err) {
+          toast(err.message, true);
+        }
+      });
+    });
+  }
+
+  function openMasterModal(master = null) {
+    state.editingId = master ? master.id : null;
+    state.slots = master ? master.slots.map((s) => ({ ...s })) : [];
+    state.weekdays = new Set();
+
+    $('#masterModalTitle').textContent = master ? '编辑大师' : '新添大师';
+    $('#masterSubmit').textContent = master ? '保存修改' : '添加大师';
+    $('#masterName').value = master ? master.name : '';
+    $('#masterPrice').value = master ? master.price : '';
+    $('#slotStart').value = '19:00';
+    $('#slotEnd').value = '21:00';
+    renderWeekdayPicker();
+    renderSlotList();
+    openModal('masterModal');
+    setTimeout(() => $('#masterName').focus(), 60);
+  }
+
+  function renderWeekdayPicker() {
+    document.querySelectorAll('#weekdayPicker button').forEach((btn) => {
+      btn.classList.toggle('on', state.weekdays.has(Number(btn.dataset.wd)));
+    });
+  }
+
+  function renderSlotList() {
+    $('#slotList').innerHTML = state.slots.map((s, i) => `
+      <div class="slot-row">
+        <span class="slot-text">${WEEKDAYS[s.weekday]}　${s.start_time} – ${s.end_time}</span>
+        <button type="button" class="x" data-remove="${i}" aria-label="删除">×</button>
+      </div>`).join('');
+    document.querySelectorAll('[data-remove]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.slots.splice(Number(btn.dataset.remove), 1);
+        renderSlotList();
+      });
+    });
+  }
+
+  /* ================= 事件绑定 ================= */
+  // 登录
+  $('#loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const data = await api('/api/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          login_name: $('#loginName').value.trim(),
+          password: $('#loginPassword').value,
+        }),
+      });
+      await loadMe();
+      renderAuth();
+      closeModal('loginModal');
+      $('#loginForm').reset();
+      toast(`欢迎回来，${data.user.display_name}`);
+      route();
+      if (state.applyMaster) {
+        const m = state.applyMaster;
+        state.applyMaster = null;
+        setTimeout(() => beginApply(m.id), 200);
+      }
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  // 提交预约
+  $('#applyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!state.applyMaster) return;
+    try {
+      await api('/api/applications', {
+        method: 'POST',
+        body: JSON.stringify({ master_id: state.applyMaster.id, note: $('#applyNote').value.trim() }),
+      });
+      closeModal('applyModal');
+      toast('申请已发送，等待大师回复');
+      state.applyMaster = null;
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  // 我的 → 进入管理端
+  $('#enterAdminBtn').addEventListener('click', () => {
+    if (state.me.is_admin) { location.hash = '#admin'; return; }
+    $('#adminPassword').value = '';
+    openModal('adminModal');
+    setTimeout(() => $('#adminPassword').focus(), 50);
+  });
+
+  $('#adminForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('/api/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({ password: $('#adminPassword').value }),
+      });
+      state.me.is_admin = true;
+      closeModal('adminModal');
+      renderAuth();
+      location.hash = '#admin';
+      toast('已进入管理端');
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  $('#meLogoutBtn').addEventListener('click', async () => {
+    await api('/api/logout', { method: 'POST' }).catch(() => {});
+    state.me = { user: null, is_admin: false };
+    renderAuth();
+    location.hash = '#home';
+    toast('已退出登录');
+  });
+
+  // 管理端 tabs
+  document.querySelectorAll('[data-admin-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.adminTab;
+      state.adminTab = tab;
+      document.querySelectorAll('[data-admin-tab]').forEach((b) => b.classList.toggle('active', b === btn));
+      $('#adminTabApps').hidden = tab !== 'apps';
+      $('#adminTabMasters').hidden = tab !== 'masters';
+      updateFab();
+      if (tab === 'apps') loadApplications();
+      else loadAdminMasters();
+    });
+  });
+
+  // 处理申请
+  $('#respondForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!state.respond) return;
+    const note = $('#respondNote').value.trim();
+    if (!note) return toast('请填写备注', true);
+    try {
+      await api(`/api/admin/applications/${state.respond.id}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({ action: state.respond.action, note }),
+      });
+      closeModal('respondModal');
+      state.respond = null;
+      toast('已处理并发送给用户');
+      loadApplications();
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  // 大师表单
+  document.querySelectorAll('#weekdayPicker button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const wd = Number(btn.dataset.wd);
+      if (state.weekdays.has(wd)) state.weekdays.delete(wd);
+      else state.weekdays.add(wd);
+      renderWeekdayPicker();
+    });
+  });
+
+  $('#addSlotBtn').addEventListener('click', () => {
+    if (!state.weekdays.size) return toast('请先选择星期', true);
+    const start = $('#slotStart').value;
+    const end = $('#slotEnd').value;
+    if (!start || !end) return toast('请选择开始与结束时间', true);
+    if (start === end) return toast('开始与结束时间不能相同', true);
+    let added = 0;
+    for (const wd of [...state.weekdays].sort((a, b) => a - b)) {
+      const exists = state.slots.some((s) => s.weekday === wd && s.start_time === start && s.end_time === end);
+      if (!exists) {
+        state.slots.push({ weekday: wd, start_time: start, end_time: end });
+        added++;
+      }
+    }
+    renderSlotList();
+    toast(added ? `已添加 ${added} 个时段` : '该时段已存在');
+  });
+
+  $('#masterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: $('#masterName').value.trim(),
+      price: Number($('#masterPrice').value),
+      slots: state.slots,
+    };
+    if (!payload.name) return toast('请填写大师名称', true);
+    if (!Number.isFinite(payload.price) || payload.price < 0) return toast('价格不合法', true);
+    try {
+      if (state.editingId) {
+        await api(`/api/admin/masters/${state.editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        toast('已保存修改');
+      } else {
+        await api('/api/admin/masters', { method: 'POST', body: JSON.stringify(payload) });
+        toast('大师已添加，用户端立即可见');
+      }
+      closeModal('masterModal');
+      loadAdminMasters();
+      loadMasters(true);
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  $('#addMasterBtn').addEventListener('click', () => openMasterModal());
+
+  // 退出管理端（保留登录）
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'adminExitBtn') {
+      api('/api/admin/logout', { method: 'POST' }).catch(() => {});
+      state.me.is_admin = false;
+      renderAuth();
+      location.hash = '#me';
+      toast('已退出管理端');
+    }
+  });
+
+  /* ================= 初始化 ================= */
+  async function loadMe() {
+    try {
+      state.me = await api('/api/me');
+    } catch {
+      state.me = { user: null, is_admin: false };
+    }
+  }
+
+  (async () => {
+    await loadMe();
+    renderAuth();
+    await loadMasters();
+    route();
+  })();
+
+  setInterval(() => {
+    if (state.view === 'home') loadMasters(true);
+  }, 60_000);
+})();
+
+</script>
+</body>
+</html>
