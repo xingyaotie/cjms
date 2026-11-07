@@ -416,6 +416,7 @@ main.page {
 #toast.error { background: rgba(184, 31, 38, 0.96); }
 
 /* ===== 我的页面 ===== */
+.page-back { display: flex; margin-bottom: 16px; }
 .me-card {
   display: flex;
   flex-wrap: wrap;
@@ -708,6 +709,9 @@ footer.site-footer {
 
   <!-- ========== 我的 ========== -->
   <main class="page" id="view-me" hidden>
+    <div class="page-back">
+      <a class="btn btn-soft btn-sm" href="#home">← 返回首页</a>
+    </div>
     <section class="me-card">
       <div class="avatar" id="meAvatar">—</div>
       <div>
@@ -995,7 +999,8 @@ footer.site-footer {
 
     /* ---------- 账号 ---------- */
     if (path === '/api/login' && method === 'POST') {
-      const d = await rpc('api_login', {
+      // 用象棋专用登录：不写班级平台的 last_login_at，管理端看不到这次登录
+      const d = await rpc('api_xq_login', {
         p_username: String(body.login_name || '').trim(),
         p_password: String(body.password || '')
       });
