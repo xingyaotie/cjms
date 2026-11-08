@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#C0392B">
+<meta name="robots" content="noindex">
+<title>老牧师音乐平台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23C0392B'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23FFFFFF' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23FFFFFF'/%3E%3C/svg%3E">
+<style>
+:root{
+  --red:#C0392B; --red-d:#A5291F; --red-l:#D9453A;
+  --ink:#221D1B; --ink2:#5B514C; --muted:#8A807B;
+  --line:rgba(31,26,24,.12); --paper:#FBF7F5; --card:#fff;
+  --serif:"Songti SC","Noto Serif SC","Source Han Serif SC",Georgia,serif;
+  --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(60% 42% at 50% 30%,rgba(192,57,43,.10),transparent 70%),
+             radial-gradient(90% 60% at 50% 110%,rgba(192,57,43,.05),transparent 70%)}
+button{font-family:inherit;cursor:pointer}
+[hidden]{display:none!important}
+
+/* ---------- 登录 ---------- */
+#loginView{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:34px 20px;gap:22px}
+.brand{text-align:center}
+.brand-mark{width:64px;height:64px;border-radius:50%;margin:0 auto 16px;
+  background:repeating-radial-gradient(circle at 50% 50%,#fff 0 2px,#F6DED8 2px 4px);
+  box-shadow:0 0 0 1px rgba(192,57,43,.35),0 12px 30px rgba(0,0,0,.18);
+  display:grid;place-items:center}
+.brand-mark i{width:20px;height:20px;border-radius:50%;display:block;
+  background:radial-gradient(circle at 35% 30%,#F6C7C0,#D9453A 60%,#A5291F)}
+.brand h1{font-family:var(--serif);font-size:23px;font-weight:500;letter-spacing:.14em;margin-bottom:8px}
+.brand p{font-size:12px;color:var(--muted);letter-spacing:.18em}
+
+.login-card{width:100%;max-width:372px;background:var(--card);border-radius:16px;padding:26px 24px 20px;
+  box-shadow:0 18px 44px rgba(31,26,24,.12);border:1px solid var(--line)}
+.float-field{position:relative;margin-bottom:16px}
+.float-field input{width:100%;height:52px;border:1px solid var(--line);border-radius:11px;
+  background:#fff;padding:18px 14px 4px;font-size:15px;color:var(--ink);outline:none;transition:.16s}
+.float-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+.float-field label{position:absolute;left:15px;top:17px;font-size:14px;color:#A29A95;
+  pointer-events:none;transition:.16s}
+.float-field input:focus + label,
+.float-field input:not(:placeholder-shown) + label{top:6px;font-size:11.5px;color:var(--red)}
+.err{min-height:20px;font-size:13px;color:#B42318;text-align:center;margin:2px 0 8px;line-height:1.5}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:46px;width:100%;
+  border:none;border-radius:11px;font-size:15px;font-weight:600;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--red-l),var(--red));color:#fff;
+  box-shadow:0 8px 20px rgba(192,57,43,.28);transition:.15s}
+.btn:hover{box-shadow:0 10px 24px rgba(192,57,43,.36)}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.login-foot{margin-top:14px;text-align:center;font-size:12px;color:#B3ABA6}
+
+/* ---------- 应用 ---------- */
+#appView{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+.tb-mark{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;flex:none;
+  display:grid;place-items:center;font-family:var(--serif);font-size:16px}
+.tb-title{font-family:var(--serif);font-size:16px;letter-spacing:.1em}
+.tb-sub{font-size:11.5px;color:var(--muted);letter-spacing:.12em}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 6px;border-radius:999px;
+  background:#FDF0F2;border:1px solid #F6D5DA;font-size:13px;color:#9B0C24;max-width:170px}
+.chip b{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;
+  display:grid;place-items:center;flex:none;font-weight:600}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-btn{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  color:var(--ink2);font-size:13px}
+.tb-btn:hover{background:#FAFAFB}
+
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:26px 18px 120px}
+.hero{padding:18px 2px 22px}
+.hero h2{font-family:var(--serif);font-size:21px;letter-spacing:.1em;margin-bottom:8px}
+.hero p{font-size:13px;color:var(--muted);line-height:1.7}
+
+.list-card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.list-head{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid #F1F2F5}
+.list-head b{font-size:14px}
+.list-head span{margin-left:auto;font-size:12px;color:var(--muted)}
+.empty{padding:46px 20px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.9}
+.empty strong{display:block;color:var(--ink2);font-size:15px;margin-bottom:6px}
+
+/* 底部播放条（空壳） */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding:10px 16px 14px;display:flex;align-items:center;gap:12px}
+.pl-btn{width:46px;height:46px;border-radius:50%;border:none;flex:none;
+  background:#EFE9E6;color:#B9B0AB;display:grid;place-items:center;cursor:not-allowed}
+.pl-meta{flex:1;min-width:0}
+.pl-title{font-size:13.5px;color:var(--ink2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pl-bar{height:4px;border-radius:999px;background:#EFE9E6;margin-top:7px;overflow:hidden}
+.pl-bar i{display:block;height:100%;width:0;background:var(--red)}
+
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:13.5px}
+.spinner{width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;
+  display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media(max-width:520px){
+  .hero h2{font-size:19px}
+  .chip{max-width:110px}
+}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<!-- ========== 登录 ========== -->
+<div id="loginView">
+  <div class="brand">
+    <div class="brand-mark"><i></i></div>
+    <h1>老牧师音乐平台</h1>
+    <p>用班级平台的账号登录</p>
+  </div>
+
+  <div class="login-card">
+    <form id="loginForm" novalidate>
+      <div class="float-field">
+        <input id="userInput" type="text" placeholder=" " autocomplete="username" maxlength="32">
+        <label for="userInput">登录名</label>
+      </div>
+      <div class="float-field">
+        <input id="pwInput" type="password" placeholder=" " autocomplete="current-password">
+        <label for="pwInput">密码</label>
+      </div>
+      <p class="err" id="loginErr"></p>
+      <button class="btn" id="loginBtn" type="submit">登 录</button>
+    </form>
+    <p class="login-foot">账号和班级服务平台是同一个</p>
+  </div>
+</div>
+
+<!-- ========== 应用（空壳） ========== -->
+<div id="appView" hidden>
+  <header class="topbar">
+    <div class="tb-mark">牧</div>
+    <div>
+      <div class="tb-title">老牧师音乐平台</div>
+      <div class="tb-sub" id="tbSub">音乐库</div>
+    </div>
+    <div class="tb-right">
+      <span class="chip"><b id="userDot">听</b><span id="userName">听众</span></span>
+      <button class="tb-btn" id="btnLogout" type="button">退出</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h2>音乐库</h2>
+      <p>平台正在搭建中，暂时还没有上架任何音乐。</p>
+    </div>
+
+    <div class="list-card">
+      <div class="list-head"><b>全部曲目</b><span id="trackCount">0 首</span></div>
+      <div class="empty" id="trackEmpty">
+        <strong>还没有歌曲</strong>
+        等歌手把作品交上来，这里就会显示曲目列表。
+      </div>
+      <div id="trackList"></div>
+    </div>
+  </main>
+
+  <div class="player">
+    <button class="pl-btn" type="button" aria-label="暂无歌曲" disabled>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+    </button>
+    <div class="pl-meta">
+      <div class="pl-title" id="plTitle">暂无歌曲</div>
+      <div class="pl-sub" id="plSub">音乐平台上架后可以在这里播放</div>
+      <div class="pl-bar"><i></i></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* supabase-js 多源加载：优先用仓库里那份，失败再走 CDN */
+window.__supaReady = new Promise(function (resolve) {
+  if (window.supabase) return resolve(true);
+  var sources = [
+    './supabase.min.js',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+    'https://unpkg.com/@supabase/supabase-js@2',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
+  ];
+  var i = 0;
+  function next() {
+    if (window.supabase) return resolve(true);
+    if (i >= sources.length) return resolve(false);
+    var el = document.createElement('script');
+    el.src = sources[i++];
+    el.async = true;
+    el.onload = function () { window.supabase ? resolve(true) : next(); };
+    el.onerror = function () { next(); };
+    document.head.appendChild(el);
+  }
+  next();
+  setTimeout(function () { resolve(!!window.supabase); }, 20000);
+});
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* 跟班级平台同一个数据库；以后要挂代理，只改下面这一行 */
+  var REAL_URL = 'https://hkmxmkujzikcgrnlrxit.supabase.co';
+  var KEY = 'sb_publishable_eK9SJy7QLl9WLpcXKncHmw_U0GTsPVw';
+  var SESSION = 'lms_music_token';
+
+  var db = null;
+  var me = null;
+  var token = '';
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function toast(msg) {
+    var el = document.getElementById('toastBox');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toastBox';
+      el.style.cssText = 'position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:9999;' +
+        'background:rgba(31,26,24,.92);color:#fff;font-size:13px;padding:10px 16px;border-radius:10px;' +
+        'opacity:0;transition:.2s;max-width:84vw;text-align:center';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    requestAnimationFrame(function () { el.style.opacity = '1'; });
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.style.opacity = '0'; }, 2600);
+  }
+
+  function humanize(e) {
+    var m = (e && e.message) || '';
+    if (/PGRST202|could not find the function|schema cache/i.test(m)) {
+      return '数据库还没准备好，请联系管理员';
+    }
+    if (/Failed to fetch|NetworkError|Load failed|Network request failed|TypeError/i.test(m)) {
+      return '连不上数据库：当前网络访问不了 supabase，换 WiFi / 换浏览器再试';
+    }
+    return m || '操作失败';
+  }
+
+  function api(fn, params) {
+    return db.rpc(fn, params || {}).then(function (res) {
+      if (res.error) throw new Error(humanize(res.error));
+      var d = res.data;
+      if (!d || d.ok === false) {
+        var err = new Error((d && d.error) || '操作失败');
+        err.data = d || null;
+        throw err;
+      }
+      return d;
+    }, function (e) { throw new Error(humanize(e)); });
+  }
+
+  /* ---------- 登录 ---------- */
+  function doLogin() {
+    var u = $('userInput').value.trim();
+    var p = $('pwInput').value;
+    var err = $('loginErr');
+    var btn = $('loginBtn');
+
+    err.textContent = '';
+    if (!u || !p) { err.textContent = '请输入登录名和密码'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '登录中…';
+
+    api('api_login', { p_username: u, p_password: p }).then(function (r) {
+      btn.disabled = false;
+      btn.textContent = '登 录';
+      token = r.token;
+      me = r.profile;
+      try { sessionStorage.setItem(SESSION, JSON.stringify({ token: token, me: me, ts: Date.now() })); } catch (e) {}
+      $('pwInput').value = '';
+      enter();
+    }, function (e) {
+      btn.disabled = false;
+      btn.textContent = '登 录';
+      if (e.data && e.data.banned) {
+        err.textContent = (e.data.until ? '账号已被封禁' : '账号已被永久封禁') +
+          (e.data.reason ? '：' + e.data.reason : '');
+        return;
+      }
+      err.textContent = e.message;
+    });
+  }
+
+  function enter() {
+    var name = (me && (me.display_name || me.username)) || '听众';
+    $('loginView').hidden = true;
+    $('appView').hidden = false;
+    $('userName').textContent = name;
+    $('userDot').textContent = String(name).slice(0, 1);
+    $('tbSub').textContent = (me && me.role === 'vip') ? '高级会员' : '音乐库';
+    $('trackCount').textContent = '0 首';
+  }
+
+  function logout() {
+    var t = token;
+    token = ''; me = null;
+    try { sessionStorage.removeItem(SESSION); } catch (e) {}
+    if (db && t) api('api_logout', { p_token: t }).catch(function () {});
+    $('appView').hidden = true;
+    $('loginView').hidden = false;
+    $('userInput').value = '';
+    $('pwInput').value = '';
+    $('userInput').focus();
+  }
+
+  function restore() {
+    try {
+      var s = JSON.parse(sessionStorage.getItem(SESSION) || 'null');
+      if (!s || !s.token) return;
+      token = s.token;
+      me = s.me;
+      api('api_me', { p_token: token }).then(function (r) {
+        me = r.profile || me;
+        enter();
+      }, function () { logout(); });
+    } catch (e) {}
+  }
+
+  /* ---------- 启动 ---------- */
+  function boot() {
+    var ready = window.__supaReady || Promise.resolve(!!window.supabase);
+
+    ready.then(function (ok) {
+      if (!ok || !window.supabase) {
+        $('loginErr').textContent = '数据库脚本没加载成功，检查网络后刷新（仓库里要有 supabase.min.js）';
+        return;
+      }
+
+      db = window.supabase.createClient(REAL_URL, KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      $('loginForm').addEventListener('submit', function (e) { e.preventDefault(); doLogin(); });
+      $('btnLogout').addEventListener('click', logout);
+
+      restore();
+      $('userInput').focus();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>
