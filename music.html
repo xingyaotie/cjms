@@ -277,7 +277,19 @@ window.__supaReady = new Promise(function (resolve) {
     btn.disabled = true;
     btn.textContent = '登录中…';
 
-    api('api_login', { p_username: u, p_password: p }).then(function (r) {
+    /* 用「外部平台登录」：不写班级平台的 last_login_at / login_count，
+       管理端的「最后登录」不会被这次登录刷掉。
+       先试 api_ext_login，没有就退回象棋那个同款接口。 */
+    var login = function () {
+      return api('api_ext_login', { p_username: u, p_password: p }).catch(function (e) {
+        if (/还没准备好|缺少|不存在|PGRST202|schema cache/i.test(e.message)) {
+          return api('api_xq_login', { p_username: u, p_password: p });
+        }
+        throw e;
+      });
+    };
+
+    login().then(function (r) {
       btn.disabled = false;
       btn.textContent = '登 录';
       token = r.token;
