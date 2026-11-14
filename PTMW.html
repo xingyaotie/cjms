@@ -73,7 +73,7 @@ b{font-weight:800}
 /* ===== 开始视图 ===== */
 #view-start{
   min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:56px 20px 40px;gap:26px;position:relative;
+  justify-content:center;padding:56px 20px 40px;gap:24px;position:relative;
 }
 .theme-float{position:fixed;top:16px;right:16px;z-index:30;box-shadow:var(--shadow)}
 .title-block{text-align:center}
@@ -92,19 +92,18 @@ b{font-weight:800}
 .mode-card p{color:var(--muted);font-size:14px}
 .swatches{display:flex;gap:8px}
 .swatches i{width:26px;height:26px;border-radius:8px;display:block}
-.rules{
-  max-width:620px;background:var(--panel);border:1px solid var(--line);
-  border-radius:16px;padding:20px 24px;box-shadow:var(--shadow);
+
+.ghost-btn{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:11px 22px;font-size:14.5px;letter-spacing:.08em;box-shadow:var(--shadow);
+  transition:border-color .15s,transform .15s;
 }
-.rules h3{font-size:15px;margin-bottom:12px;color:var(--muted);letter-spacing:.1em}
-.rules ul{list-style:none;display:grid;gap:9px}
-.rules li{font-size:14px;line-height:1.6;color:var(--text);padding-left:18px;position:relative}
-.rules li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:2px;background:var(--muted)}
+.ghost-btn:hover{border-color:var(--muted);transform:translateY(-1px)}
 
 /* ===== 游戏视图 ===== */
 #view-game{min-height:100vh;display:flex;flex-direction:column}
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);
   position:sticky;top:0;z-index:10;
 }
@@ -113,9 +112,10 @@ b{font-weight:800}
 .topbar-right{display:flex;gap:8px;flex:none}
 .topbar-right button{
   background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
-  padding:9px 13px;font-size:14px;min-height:40px;transition:border-color .15s;
+  padding:9px 13px;font-size:14px;min-height:40px;transition:border-color .15s,opacity .15s;
 }
 .topbar-right button:hover{border-color:var(--muted)}
+.topbar-right button[disabled]{opacity:.4;cursor:not-allowed;border-color:var(--line)}
 
 .game-layout{
   flex:1;display:flex;align-items:center;justify-content:center;gap:20px;
@@ -153,10 +153,8 @@ b{font-weight:800}
 .player-card.active .tag{color:var(--pc);font-weight:700}
 
 /* 双人：两个玩家卡上下排，不出左右两侧 */
-.game-layout.mode-2{flex-direction:column;gap:12px;flex-wrap:nowrap}
-.game-layout.mode-2 .side-panel{
-  flex-direction:row;width:min(560px,92vw,66vh);gap:0;
-}
+.game-layout.mode-2{flex-direction:column;gap:12px;flex-wrap:nowrap;--board-w:min(720px,88vw,var(--fit,720px))}
+.game-layout.mode-2 .side-panel{flex-direction:row;width:var(--board-w);gap:0}
 .game-layout.mode-2 .player-card{
   flex:1 1 auto;width:auto;max-width:none;
   flex-direction:row;align-items:center;gap:14px;padding:11px 18px;
@@ -164,21 +162,21 @@ b{font-weight:800}
 .game-layout.mode-2 .player-card .row{flex:1}
 .game-layout.mode-2 .player-card .tag{margin-left:4px}
 
-.board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
 .board-box{
   background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;
-  width:min(720px, 88vw);box-shadow:var(--shadow);
+  width:min(720px,88vw,var(--fit,720px));box-shadow:var(--shadow);
 }
-.game-layout.mode-2 .board-box{width:min(560px, 92vw, 66vh)}
-canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius:8px;touch-action:manipulation}
+.game-layout.mode-2 .board-box{width:var(--board-w)}
+canvas#board{display:block;width:100%;height:auto;border-radius:8px;touch-action:manipulation}
 #status{
   font-size:14px;color:var(--muted);text-align:center;min-height:20px;line-height:1.7;
 }
 #status b{color:var(--text)}
 #status .notice{display:block;font-size:12.5px;color:var(--muted);opacity:.9;margin-top:2px}
 
-/* ===== 结算遮罩 ===== */
-#overlay-end{
+/* ===== 遮罩层（结算 / 规则 / 选尺寸） ===== */
+#overlay-end,#overlay-rules,#overlay-size{
   position:fixed;inset:0;background:var(--overlay);
   display:flex;align-items:center;justify-content:center;padding:20px;z-index:20;
   backdrop-filter:blur(2px);
@@ -186,6 +184,7 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
 .end-card{
   background:var(--panel);border:1px solid var(--line);border-radius:20px;
   padding:30px 32px;width:min(420px,92vw);box-shadow:var(--shadow);
+  max-height:88vh;overflow:auto;
 }
 .end-card h2{font-size:24px;margin-bottom:6px;text-align:center}
 .end-card .winner{text-align:center;color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -205,23 +204,57 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
 }
 .btn-primary:hover{filter:brightness(1.08)}
 
+/* 选尺寸 */
+.pick-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:26px 26px 20px;width:min(420px,92vw);box-shadow:var(--shadow);
+  max-height:88vh;overflow:auto;
+}
+.pick-card h2{font-size:20px;letter-spacing:.06em}
+.pick-card .pick-sub{margin-top:6px;color:var(--muted);font-size:13px;letter-spacing:.05em}
+.size-list{display:flex;flex-direction:column;gap:10px;margin:18px 0 14px}
+.size-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 16px;border:1px solid var(--line);border-radius:12px;
+  background:var(--panel-2);font-size:15px;text-align:left;
+  transition:border-color .15s,transform .15s;
+}
+.size-item:hover{border-color:var(--muted);transform:translateY(-1px)}
+.size-item .size-dim{color:var(--muted);font-size:13.5px;font-variant-numeric:tabular-nums}
+.btn-cancel{
+  width:100%;background:none;border:1px solid var(--line);border-radius:12px;
+  padding:11px;font-size:14px;color:var(--muted);
+}
+.btn-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+/* 规则 */
+.rules-card h2{margin-bottom:16px}
+.rules-list{list-style:none;display:grid;gap:10px;margin-bottom:22px}
+.rules-list li{font-size:14px;line-height:1.7;color:var(--text);padding-left:18px;position:relative}
+.rules-list li::before{content:"";position:absolute;left:0;top:10px;width:7px;height:7px;border-radius:2px;background:var(--muted)}
+
 @media (max-width:860px){
   #view-start{padding-top:64px}
   .mode-cards{grid-template-columns:1fr;width:min(320px,90vw)}
   .game-layout{gap:10px;padding:12px}
   .side-panel{flex-direction:row;width:100%;justify-content:center;flex-wrap:wrap}
   .player-card{width:150px}
+  .game-layout.mode-2{--board-w:min(720px,94vw)}
   .game-layout.mode-2 .side-panel{width:100%}
   .game-layout.mode-2 .player-card{width:100%;flex:1 1 auto}
-  .board-box,.game-layout.mode-2 .board-box{width:min(720px,94vw);padding:8px}
+  .board-box{padding:8px}
   .topbar{padding:10px 12px;gap:8px}
   .topbar h1{font-size:16px;letter-spacing:.08em}
   .topbar-right button{padding:8px 10px;font-size:13px;min-height:38px}
   .theme-btn{padding:6px 10px;font-size:12px;min-height:34px}
 }
-@media (max-width:420px){
-  .topbar h1{font-size:15px}
+@media (max-width:560px){
+  /* 窄屏只留图标，保证顶栏四个元素排得下 */
+  .theme-btn .txt{display:none}
+  .theme-btn{padding:6px 9px}
+  .topbar-right{gap:6px}
   .topbar-right button{padding:7px 9px;font-size:12.5px}
+  .topbar h1{font-size:15px;letter-spacing:.04em}
 }
 </style>
 </head>
@@ -242,29 +275,19 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
     <button class="mode-card" data-mode="2">
       <div class="swatches"><i style="background:var(--red)"></i><i style="background:var(--blue)"></i></div>
       <h2>双人对战</h2>
-      <p>25 × 25 网格 · 红方 对 蓝方</p>
+      <p>4 种棋盘尺寸 · 红方 对 蓝方</p>
     </button>
     <button class="mode-card" data-mode="4">
       <div class="swatches">
         <i style="background:var(--red)"></i><i style="background:var(--blue)"></i>
-        <i style="background:var(--green)"></i><i style="background:var(--orange)"></i>
+        <i style="background:var(--orange)"></i><i style="background:var(--green)"></i>
       </div>
       <h2>四人混战</h2>
-      <p>50 × 50 网格 · 红 / 蓝 / 绿 / 橙</p>
+      <p>4 种棋盘尺寸 · 红 / 蓝 / 橙 / 绿</p>
     </button>
   </div>
 
-  <div class="rules">
-    <h3>玩法规则</h3>
-    <ul>
-      <li>各方从棋盘边缘中点的初始格子出发，按顺时针轮流行动，每回合占领 1 格。</li>
-      <li>可向上下左右或斜向扩张，新格子必须与己方领土八方向相邻。</li>
-      <li>与敌方领土相邻时，可选中敌方格子再点一次抢夺；被抢格子立旗，永久归属新主人。</li>
-      <li>轮到自己时，也可以点己方领地再点一次立旗守护：插了旗的格子对方永远抢不走，代价是这一回合不再扩张。</li>
-      <li>用己方领土围成闭环后，圈内未插旗的土地全部归入己方。</li>
-      <li>地盘被全部占领后，格子数量最多的一方获胜。</li>
-    </ul>
-  </div>
+  <button class="ghost-btn" id="btn-rules">玩法规则</button>
 </section>
 
 <!-- ===== 视图：游戏 ===== -->
@@ -277,8 +300,9 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
       </button>
     </div>
     <div class="topbar-right">
-      <button id="btn-back">返回菜单</button>
+      <button id="btn-undo" disabled>撤回</button>
       <button id="btn-restart">重新开始</button>
+      <button id="btn-back">返回菜单</button>
     </div>
   </header>
 
@@ -292,7 +316,7 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
   </div>
 </section>
 
-<!-- ===== 视图：结算 ===== -->
+<!-- ===== 结算 ===== -->
 <div id="overlay-end" hidden>
   <div class="end-card">
     <h2>战斗结束</h2>
@@ -302,24 +326,71 @@ canvas#board{display:block;width:100%;height:auto;aspect-ratio:1/1;border-radius
   </div>
 </div>
 
+<!-- ===== 选棋盘尺寸 ===== -->
+<div id="overlay-size" hidden>
+  <div class="pick-card">
+    <h2 id="pick-title">选择棋盘</h2>
+    <p class="pick-sub" id="pick-sub"></p>
+    <div class="size-list" id="size-list"></div>
+    <button class="btn-cancel" id="btn-size-cancel">取消</button>
+  </div>
+</div>
+
+<!-- ===== 玩法规则 ===== -->
+<div id="overlay-rules" hidden>
+  <div class="end-card rules-card">
+    <h2>玩法规则</h2>
+    <ul class="rules-list">
+      <li>各方从棋盘边缘中点的初始格子出发，按顺时针轮流行动，每回合占领 1 格。</li>
+      <li>可向上下左右或斜向扩张，新格子必须与己方领土八方向相邻。</li>
+      <li>与敌方领土相邻时，可选中敌方格子再点一次抢夺；被抢格子立旗，永久归属新主人。</li>
+      <li>轮到自己时，也可以点己方领地再点一次立旗守护：插了旗的格子对方永远抢不走，代价是这一回合不再扩张。</li>
+      <li>用己方领土围成闭环后，圈内未插旗的土地全部归入己方。</li>
+      <li>地盘被全部占领后，格子数量最多的一方获胜。</li>
+      <li>右上角「撤回」可以撤销上一步（包括抢夺、立旗和围圈吞并）。</li>
+    </ul>
+    <button class="btn-primary" id="btn-rules-close">知道了</button>
+  </div>
+</div>
+
 <script>
 /* ===== 配置 ===== */
 const MODES = {
-  2: { size: 25, players: [
-    { name: '红方', color: '#e5484d' },
-    { name: '蓝方', color: '#3e7bf6' },
-  ]},
-  4: { size: 50, players: [
-    { name: '红方', color: '#e5484d' },
-    { name: '蓝方', color: '#3e7bf6' },
-    { name: '绿方', color: '#30a46c' },
-    { name: '橙方', color: '#f76b15' },
-  ]},
+  2: {
+    title: '双人对战',
+    players: [
+      { name: '红方', color: '#e5484d' },
+      { name: '蓝方', color: '#3e7bf6' },
+    ],
+    sizes: [
+      { key: 'std',   label: '标准模式', w: 18, h: 21 },
+      { key: 'small', label: '小型模式', w: 10, h: 10 },
+      { key: 'mid',   label: '中型模式', w: 18, h: 19 },
+      { key: 'large', label: '大型模式', w: 25, h: 25 },
+    ],
+  },
+  4: {
+    title: '四人混战',
+    players: [
+      { name: '红方', color: '#e5484d' },
+      { name: '蓝方', color: '#3e7bf6' },
+      { name: '橙方', color: '#f76b15' },
+      { name: '绿方', color: '#30a46c' },
+    ],
+    sizes: [
+      { key: 'std',   label: '标准模式', w: 18, h: 21 },
+      { key: 'small', label: '小型模式', w: 10, h: 10 },
+      { key: 'mid',   label: '中型模式', w: 25, h: 25 },
+      { key: 'large', label: '大型模式', w: 50, h: 50 },
+    ],
+  },
 };
 const DIRS8 = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 const DIRS4 = [[-1,0],[1,0],[0,-1],[0,1]];
+const HISTORY_LIMIT = 300;
 
 let S = null;
+let pendingMode = 2;
 const $ = id => document.getElementById(id);
 
 /* ===== 主题 ===== */
@@ -354,41 +425,54 @@ function cssVar(name, fallback) {
 }
 
 /* ===== 开局 ===== */
-function newGame(mode) {
-  const cfg = MODES[mode], N = cfg.size;
-  const owner = new Int8Array(N * N).fill(-1);
-  const flag = new Uint8Array(N * N);
+function newGame(mode, sizeKey) {
+  const cfg = MODES[mode];
+  const size = cfg.sizes.filter(s => s.key === sizeKey)[0] || cfg.sizes[0];
+  const W = size.w, H = size.h;
+
+  const owner = new Int8Array(W * H).fill(-1);
+  const flag = new Uint8Array(W * H);
   const players = cfg.players.map(p => ({ ...p, count: 0 }));
-  const c = Math.floor(N / 2);
-  // 坐标是 [行, 列]：两人时红方在上边中点、蓝方在下边中点（上下对峙）
+
+  const cW = Math.floor(W / 2), cH = Math.floor(H / 2);
+  // [行, 列]：两人红方上边中点、蓝方下边中点；四人顺时针 上/右/下/左
   const starts = mode === 2
-    ? [[0, c], [N - 1, c]]
-    : [[0, c], [c, N - 1], [N - 1, c], [c, 0]];
-  starts.forEach(([r, cc], i) => { owner[r * N + cc] = i; players[i].count = 1; });
+    ? [[0, cW], [H - 1, cW]]
+    : [[0, cW], [cH, W - 1], [H - 1, cW], [cH, 0]];
+  starts.forEach(([r, c], i) => { owner[r * W + c] = i; players[i].count = 1; });
 
   S = {
-    mode, N, owner, flag, players,
-    turn: 0, selected: null, hover: null, over: false, notice: ''
+    mode, sizeKey: size.key, sizeLabel: size.label, W, H,
+    owner, flag, players,
+    turn: 0, selected: null, hover: null, over: false, notice: '',
+    history: []
   };
 
   $('game-layout').classList.toggle('mode-2', mode === 2);
+
+  // 棋盘宽度自适应：既不超过 720px，也要让整块棋盘塞进一屏
+  const vhCap = mode === 2 ? 58 : 66;
+  const fit = (vhCap * W / H).toFixed(2) + 'vh';
+  $('game-layout').style.setProperty('--fit', fit);
+  $('board').style.aspectRatio = W + ' / ' + H;
+
   render();
 }
 
 /* ===== 基础工具 ===== */
-function inB(r, c) { return r >= 0 && r < S.N && c >= 0 && c < S.N; }
+function inB(r, c) { return r >= 0 && r < S.H && c >= 0 && c < S.W; }
 
 function nearbyOwner(p, r, c) {
   for (const [dr, dc] of DIRS8) {
     const nr = r + dr, nc = c + dc;
-    if (inB(nr, nc) && S.owner[nr * S.N + nc] === p) return true;
+    if (inB(nr, nc) && S.owner[nr * S.W + nc] === p) return true;
   }
   return false;
 }
 
 function targetType(p, r, c) {
   if (!inB(r, c)) return null;
-  const i = r * S.N + c, o = S.owner[i];
+  const i = r * S.W + c, o = S.owner[i];
   if (o === p) return 'own';
   const near = nearbyOwner(p, r, c);
   if (o === -1) return near ? 'empty' : null;
@@ -398,57 +482,82 @@ function targetType(p, r, c) {
 
 function movesFor(p) {
   const set = new Map();
-  for (let i = 0; i < S.N * S.N; i++) {
+  const total = S.W * S.H;
+  for (let i = 0; i < total; i++) {
     if (S.owner[i] !== p) continue;
-    const r = Math.floor(i / S.N), c = i % S.N;
+    const r = Math.floor(i / S.W), c = i % S.W;
     for (const [dr, dc] of DIRS8) {
       const nr = r + dr, nc = c + dc;
       if (!inB(nr, nc)) continue;
       const t = targetType(p, nr, nc);
-      if (t === 'empty' || t === 'enemy') set.set(nr * S.N + nc, t);
+      if (t === 'empty' || t === 'enemy') set.set(nr * S.W + nc, t);
     }
   }
   return [...set.entries()].map(([i, t]) => ({
-    r: Math.floor(i / S.N), c: i % S.N, type: t,
+    r: Math.floor(i / S.W), c: i % S.W, type: t,
   }));
 }
 
 function recalcCounts() {
   S.players.forEach(p => p.count = 0);
-  for (let i = 0; i < S.N * S.N; i++) {
+  const total = S.W * S.H;
+  for (let i = 0; i < total; i++) {
     if (S.owner[i] >= 0) S.players[S.owner[i]].count++;
   }
 }
 
 function noEmpty() {
-  for (let i = 0; i < S.N * S.N; i++) if (S.owner[i] === -1) return false;
+  const total = S.W * S.H;
+  for (let i = 0; i < total; i++) if (S.owner[i] === -1) return false;
   return true;
+}
+
+/* ===== 撤回 ===== */
+function pushHistory() {
+  S.history.push({
+    owner: S.owner.slice(),
+    flag: S.flag.slice(),
+    turn: S.turn,
+  });
+  if (S.history.length > HISTORY_LIMIT) S.history.shift();
+}
+
+function undo() {
+  if (!S || S.over || !S.history.length) return;
+  const h = S.history.pop();
+  S.owner = h.owner;
+  S.flag = h.flag;
+  S.turn = h.turn;
+  S.selected = null;
+  S.notice = '已撤回上一步';
+  recalcCounts();
+  render();
 }
 
 /* ===== 围圈吞并：己方领土为墙，四边连通不到的非旗格归入己方 ===== */
 function enclosure(p) {
-  const N = S.N, reach = new Uint8Array(N * N), q = [];
+  const W = S.W, H = S.H;
+  const reach = new Uint8Array(W * H), q = [];
   const push = (r, c) => {
-    const i = r * N + c;
+    if (!inB(r, c)) return;
+    const i = r * W + c;
     if (!reach[i] && S.owner[i] !== p) { reach[i] = 1; q.push(i); }
   };
-  for (let c = 0; c < N; c++) { push(0, c); push(N - 1, c); }
-  for (let r = 0; r < N; r++) { push(r, 0); push(r, N - 1); }
+  for (let c = 0; c < W; c++) { push(0, c); push(H - 1, c); }
+  for (let r = 0; r < H; r++) { push(r, 0); push(r, W - 1); }
   while (q.length) {
-    const i = q.pop(), r = Math.floor(i / N), c = i % N;
-    for (const [dr, dc] of DIRS4) {
-      const nr = r + dr, nc = c + dc;
-      if (inB(nr, nc)) push(nr, nc);
-    }
+    const i = q.pop(), r = Math.floor(i / W), c = i % W;
+    for (const [dr, dc] of DIRS4) push(r + dr, c + dc);
   }
-  for (let i = 0; i < N * N; i++) {
+  for (let i = 0; i < W * H; i++) {
     if (S.owner[i] !== p && !reach[i] && !S.flag[i]) S.owner[i] = p;
   }
 }
 
 /* ===== 行动与回合 ===== */
 function applyAction(r, c, type) {
-  const p = S.turn, i = r * S.N + c;
+  const p = S.turn, i = r * S.W + c;
+  pushHistory();
   if (type === 'enemy') { S.owner[i] = p; S.flag[i] = 1; }
   else { S.owner[i] = p; }
   S.notice = '';
@@ -457,6 +566,18 @@ function applyAction(r, c, type) {
   S.selected = null;
   if (noEmpty()) { endGame(); return; }
   nextTurn();
+  render();
+}
+
+/* 在己方领地上立旗：该格永久守住，本回合结束 */
+function applyFlag(r, c) {
+  const i = r * S.W + c;
+  const by = S.players[S.turn].name;
+  pushHistory();
+  S.flag[i] = 1;
+  S.selected = null;
+  nextTurn();
+  S.notice = by + ' 立旗守住 1 格' + (S.notice ? '；' + S.notice : '');
   render();
 }
 
@@ -474,7 +595,7 @@ function nextTurn() {
 
 function onCellClick(r, c) {
   if (S.over) return;
-  const p = S.turn, i = r * S.N + c, t = targetType(p, r, c);
+  const p = S.turn, i = r * S.W + c, t = targetType(p, r, c);
 
   // 己方领地：可以立旗守护，代价是这一回合不再扩张
   if (t === 'own') {
@@ -507,17 +628,6 @@ function onCellClick(r, c) {
     S.selected = { r, c, type: t };
     render();
   }
-}
-
-/* 在己方领地上立旗：该格永久守住，本回合结束 */
-function applyFlag(r, c) {
-  const i = r * S.N + c;
-  const by = S.players[S.turn].name;
-  S.flag[i] = 1;
-  S.selected = null;
-  nextTurn();
-  S.notice = by + ' 立旗守住 1 格' + (S.notice ? '；' + S.notice : '');
-  render();
 }
 
 /* ===== 结算 ===== */
@@ -571,14 +681,16 @@ function renderPanel() {
 function drawBoard() {
   if (!S) return;
   const canvas = $('board');
-  const css = Math.max(200, Math.min(canvas.clientWidth || 720, 720));
+  const W = S.W, H = S.H;
+  const cssW = Math.max(160, Math.min(canvas.clientWidth || 720, 720));
+  const cell = cssW / W;
+  const cssH = cell * H;
   const dpr = window.devicePixelRatio || 1;
-  const px = Math.round(css * dpr);
-  if (canvas.width !== px || canvas.height !== px) {
-    canvas.width = px; canvas.height = px;
+  const px = Math.round(cssW * dpr), py = Math.round(cssH * dpr);
+  if (canvas.width !== px || canvas.height !== py) {
+    canvas.width = px; canvas.height = py;
   }
   const ctx = canvas.getContext('2d');
-  const N = S.N, cell = css / N;
 
   const boardBg = cssVar('--board-bg', isDark() ? '#1B2029' : '#FCF9F2');
   const emptyBg = cssVar('--empty', isDark() ? '#232A36' : '#F0EADC');
@@ -587,16 +699,14 @@ function drawBoard() {
   const hoverC  = cssVar('--hover', isDark() ? 'rgba(255,255,255,.42)' : 'rgba(20,16,8,.45)');
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, css, css);
+  ctx.clearRect(0, 0, cssW, cssH);
 
-  // 底
   ctx.fillStyle = boardBg;
-  ctx.fillRect(0, 0, css, css);
+  ctx.fillRect(0, 0, cssW, cssH);
 
-  // 格子
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      const i = r * N + c, o = S.owner[i];
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+      const i = r * W + c, o = S.owner[i];
       const x = c * cell, y = r * cell;
       ctx.fillStyle = o === -1 ? emptyBg : S.players[o].color;
       ctx.fillRect(x, y, cell + 0.5, cell + 0.5);
@@ -622,10 +732,13 @@ function drawBoard() {
     ctx.strokeStyle = gridC;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let i = 0; i <= N; i++) {
+    for (let i = 0; i <= W; i++) {
       const q = Math.round(i * cell) + 0.5;
-      ctx.moveTo(q, 0); ctx.lineTo(q, css);
-      ctx.moveTo(0, q); ctx.lineTo(css, q);
+      ctx.moveTo(q, 0); ctx.lineTo(q, cssH);
+    }
+    for (let j = 0; j <= H; j++) {
+      const q = Math.round(j * cell) + 0.5;
+      ctx.moveTo(0, q); ctx.lineTo(cssW, q);
     }
     ctx.stroke();
   }
@@ -659,6 +772,8 @@ function render() {
   if (!S) return;
   renderPanel();
   drawBoard();
+  $('btn-undo').disabled = S.over || S.history.length === 0;
+
   if (S.over) { setStatus('对局已结束。'); return; }
   const p = S.players[S.turn];
   const notice = S.notice ? `<span class="notice">${S.notice}</span>` : '';
@@ -675,23 +790,56 @@ function render() {
 /* ===== 事件绑定 ===== */
 function cellFromEvent(e) {
   const canvas = $('board'), rect = canvas.getBoundingClientRect();
-  const c = Math.floor((e.clientX - rect.left) / (rect.width / S.N));
-  const r = Math.floor((e.clientY - rect.top) / (rect.height / S.N));
+  const c = Math.floor((e.clientX - rect.left) / (rect.width / S.W));
+  const r = Math.floor((e.clientY - rect.top) / (rect.height / S.H));
   return { r, c };
 }
+
+/* 遮罩开关 */
+function openOverlay(id) { $(id).hidden = false; }
+function closeOverlay(id) { $(id).hidden = true; }
+
+['overlay-end', 'overlay-rules', 'overlay-size'].forEach(id => {
+  $(id).addEventListener('click', e => { if (e.target === $(id)) closeOverlay(id); });
+});
 
 document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
   btn.addEventListener('click', toggleTheme);
 });
 
 document.querySelectorAll('.mode-card').forEach(btn => {
-  btn.addEventListener('click', () => {
-    // 先切视图，再开局，保证画布拿到真实宽度（否则首帧会按 0 宽度绘制而糊掉）
-    $('view-start').hidden = true;
-    $('view-game').hidden = false;
-    newGame(Number(btn.dataset.mode));
-  });
+  btn.addEventListener('click', () => openSizePicker(Number(btn.dataset.mode)));
 });
+
+function openSizePicker(mode) {
+  pendingMode = mode;
+  const cfg = MODES[mode];
+  $('pick-title').textContent = cfg.title + ' · 选择棋盘';
+  $('pick-sub').textContent = cfg.players.map(p => p.name).join(' ／ ');
+  $('size-list').innerHTML = cfg.sizes.map((s, i) =>
+    `<button class="size-item" data-i="${i}">
+       <span class="size-name">${s.label}</span>
+       <span class="size-dim">${s.w} × ${s.h}</span>
+     </button>`).join('');
+  Array.prototype.forEach.call($('size-list').querySelectorAll('.size-item'), b => {
+    b.addEventListener('click', () => {
+      closeOverlay('overlay-size');
+      startGame(pendingMode, cfg.sizes[Number(b.dataset.i)].key);
+    });
+  });
+  openOverlay('overlay-size');
+}
+
+function startGame(mode, sizeKey) {
+  $('view-start').hidden = true;
+  $('view-game').hidden = false;
+  newGame(mode, sizeKey);
+}
+
+$('btn-size-cancel').addEventListener('click', () => closeOverlay('overlay-size'));
+
+$('btn-rules').addEventListener('click', () => openOverlay('overlay-rules'));
+$('btn-rules-close').addEventListener('click', () => closeOverlay('overlay-rules'));
 
 $('board').addEventListener('click', e => {
   if (!S || S.over) return;
@@ -703,7 +851,7 @@ $('board').addEventListener('mousemove', e => {
   if (!S || S.over) return;
   S.hover = cellFromEvent(e);
   const { r, c } = S.hover;
-  const canFlag = inB(r, c) && targetType(S.turn, r, c) === 'own' && !S.flag[r * S.N + c];
+  const canFlag = inB(r, c) && targetType(S.turn, r, c) === 'own' && !S.flag[r * S.W + c];
   $('board').style.cursor = canFlag ? 'pointer' : 'crosshair';
   drawBoard();
 });
@@ -715,6 +863,8 @@ $('board').addEventListener('mouseleave', () => {
   drawBoard();
 });
 
+$('btn-undo').addEventListener('click', undo);
+
 $('btn-back').addEventListener('click', () => {
   $('view-game').hidden = true;
   $('view-start').hidden = false;
@@ -723,12 +873,12 @@ $('btn-back').addEventListener('click', () => {
 });
 
 $('btn-restart').addEventListener('click', () => {
-  if (S) newGame(S.mode);
+  if (S) newGame(S.mode, S.sizeKey);
 });
 
 $('btn-again').addEventListener('click', () => {
-  $('overlay-end').hidden = true;
-  if (S) newGame(S.mode);
+  closeOverlay('overlay-end');
+  if (S) newGame(S.mode, S.sizeKey);
 });
 
 window.addEventListener('resize', () => { if (S) drawBoard(); });
